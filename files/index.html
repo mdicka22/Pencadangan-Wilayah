@@ -1,0 +1,1858 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIMADAT - Sistem Informasi Monitoring Administrasi Data Pertambangan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        :root {
+            --primary: 34 197 151;
+            --primary-dark: 16 185 129;
+            --accent: 16 185 129;
+        }
+
+        * { scrollbar-width: thin; scrollbar-color: #3f3f46 transparent; }
+        *::-webkit-scrollbar { width: 6px; }
+        *::-webkit-scrollbar-track { background: transparent; }
+        *::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 3px; }
+
+        body { font-family: 'Inter', sans-serif; }
+
+        .card-hover {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .card-hover:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+        }
+
+        .glass-panel {
+            background: rgba(39, 39, 42, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .animate-fade-in { animation: fadeIn 0.5s ease-out; }
+        .animate-slide-up { animation: slideUp 0.5s ease-out; }
+        .animate-pulse-slow { animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .table-row { transition: all 0.2s; }
+        .table-row:hover { background-color: rgba(63, 63, 70, 0.4); }
+
+        .progress-ring { transition: stroke-dashoffset 0.8s ease-in-out; }
+
+        .map-container { height: 520px; }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.4s ease-out; }
+
+        .nav-item { transition: all 0.3s; position: relative; overflow: hidden; }
+        .nav-item::before {
+            content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+            background: #10b981; transform: scaleY(0); transition: transform 0.3s;
+        }
+        .nav-item.active::before { transform: scaleY(1); }
+        .nav-item.active { background: rgba(16, 185, 129, 0.1); color: #34d399; }
+
+        .status-badge {
+            position: relative; overflow: hidden;
+        }
+        .status-badge::after {
+            content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            animation: shimmer 2s infinite;
+        }
+        @keyframes shimmer { 0% { left: -100%; } 100% { left: 100%; } }
+
+        .check-item {
+            transition: all 0.3s;
+            cursor: pointer;
+            user-select: none;
+        }
+        .check-item:hover {
+            transform: translateX(4px);
+            background: rgba(63, 63, 70, 0.6);
+        }
+
+        .search-input:focus {
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            transition: all 0.3s;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.4);
+        }
+
+        /* Stat Card Colors - AdminLTE Style */
+        .stat-card {
+            position: relative; overflow: hidden;
+        }
+        .stat-card-blue {
+            background: linear-gradient(135deg, #00c0ef 0%, #00a3c4 100%);
+        }
+        .stat-card-green {
+            background: linear-gradient(135deg, #00a65a 0%, #008d4c 100%);
+        }
+        .stat-card-yellow {
+            background: linear-gradient(135deg, #f39c12 0%, #d68910 100%);
+        }
+        .stat-card-red {
+            background: linear-gradient(135deg, #dd4b39 0%, #c0392b 100%);
+        }
+        .stat-card-purple {
+            background: linear-gradient(135deg, #605ca8 0%, #504d93 100%);
+        }
+
+        .leaflet-popup-content-wrapper { 
+            background: #18181b !important; border: 1px solid #3f3f46 !important; border-radius: 16px !important; 
+        }
+        .leaflet-popup-tip { background: #18181b !important; }
+        .leaflet-popup-content { color: #e4e4e7 !important; font-family: 'Inter', sans-serif !important; }
+
+        /* Modal body scroll */
+        .modal-body-scroll {
+            max-height: calc(80vh - 180px);
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #3f3f46 transparent;
+        }
+        .modal-body-scroll::-webkit-scrollbar { width: 6px; }
+        .modal-body-scroll::-webkit-scrollbar-track { background: transparent; }
+        .modal-body-scroll::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 3px; }
+
+        /* Checkbox toggle style */
+        .doc-checkbox {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 6px;
+            border: 2px solid #52525b;
+            background: #27272a;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        .doc-checkbox:checked {
+            background: #10b981;
+            border-color: #10b981;
+        }
+        .doc-checkbox:checked::after {
+            content: '\f00c';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            color: white;
+            font-size: 12px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        /* Link edit input */
+        .link-edit-input {
+            background: #27272a;
+            border: 1px solid #3f3f46;
+            border-radius: 8px;
+            padding: 4px 10px;
+            color: #a1a1aa;
+            font-size: 12px;
+            width: 200px;
+            outline: none;
+            transition: all 0.2s;
+        }
+        .link-edit-input:focus {
+            border-color: #10b981;
+            color: #e4e4e7;
+        }
+    </style>
+</head>
+<body class="bg-zinc-950 text-zinc-100 antialiased">
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <aside class="w-72 bg-zinc-900/95 border-r border-zinc-800 flex flex-col backdrop-blur-xl">
+            <div class="p-6 border-b border-zinc-800">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-2xl flex items-center justify-center overflow-hidden shadow-lg shadow-emerald-500/20 bg-white">
+                        <img src="logo_simadat.png" alt="SIMADAT Logo" class="w-10 h-10 object-contain">
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold tracking-tight">SIMADAT</h1>
+                        <p class="text-xs text-zinc-500 -mt-0.5">ESDM Aceh</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex-1 overflow-y-auto py-6 px-3">
+                <nav class="space-y-1" id="sidebar-nav">
+                    <a href="#" data-tab="0" class="nav-item active flex items-center gap-3 px-4 py-3 rounded-xl font-medium">
+                        <i class="fa-solid fa-gauge-high w-5 text-center"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="#" data-tab="1" class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50">
+                        <i class="fa-solid fa-map-location-dot w-5 text-center"></i>
+                        <span>Peta Wilayah</span>
+                    </a>
+                    <a href="#" data-tab="2" class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50">
+                        <i class="fa-solid fa-building w-5 text-center"></i>
+                        <span>Daftar Perusahaan</span>
+                    </a>
+                    <a href="#" data-tab="3" class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50">
+                        <i class="fa-solid fa-table-list w-5 text-center"></i>
+                        <span>Matriks Kelengkapan</span>
+                    </a>
+                    <a href="#" data-tab="4" class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50">
+                        <i class="fa-solid fa-chart-column w-5 text-center"></i>
+                        <span>Analitik & Laporan</span>
+                    </a>
+                </nav>
+
+                <div class="mt-8 px-4">
+                    <p class="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-3">Menu Cepat</p>
+                    <div class="space-y-1">
+                        <button onclick="openAddModal()" class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-zinc-400 hover:text-emerald-400 hover:bg-zinc-800/50 transition-all">
+                            <i class="fa-solid fa-plus w-5 text-center"></i>
+                            <span>Tambah Pengajuan</span>
+                        </button>
+                        <button onclick="exportToExcel()" class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-zinc-400 hover:text-emerald-400 hover:bg-zinc-800/50 transition-all">
+                            <i class="fa-solid fa-file-export w-5 text-center"></i>
+                            <span>Export Data</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 border-t border-zinc-800">
+                <div class="flex items-center gap-3 bg-zinc-800/50 rounded-2xl p-3 border border-zinc-700/50">
+                    <div class="w-10 h-10 bg-gradient-to-br from-zinc-600 to-zinc-700 rounded-full flex items-center justify-center text-lg">
+                        <i class="fa-solid fa-user-tie text-zinc-300"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="font-medium text-sm truncate">Admin Verifikasi</p>
+                        <p class="text-xs text-emerald-400 flex items-center gap-1.5">
+                            <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></span>
+                            Online
+                        </p>
+                    </div>
+                    <button onclick="logout()" class="text-zinc-500 hover:text-red-400 transition-colors p-2">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col min-w-0">
+            <!-- Topbar -->
+            <header class="h-16 bg-zinc-900/80 border-b border-zinc-800 px-6 flex items-center justify-between backdrop-blur-xl sticky top-0 z-40">
+                <div class="flex items-center gap-4">
+                    <h2 id="page-title" class="text-xl font-semibold">Dashboard Monitoring</h2>
+                    <span id="live-data-badge" class="hidden md:inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/10 text-emerald-400 rounded-full text-xs font-medium border border-emerald-500/20">
+                        <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></span>
+                        <span id="live-data-text">Mode Lokal</span>
+                    </span>
+                </div>
+
+                <div class="flex items-center gap-4">
+                    <div class="relative hidden md:block">
+                        <input type="text" id="global-search" 
+                               placeholder="Cari perusahaan, NIB, atau kabupaten..." 
+                               onkeyup="if(event.key === 'Enter') searchCompanies()"
+                               class="bg-zinc-800/80 border border-zinc-700 rounded-full pl-10 pr-4 py-2 w-72 focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 text-sm transition-all search-input">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-2.5 text-zinc-500 text-sm"></i>
+                    </div>
+
+                    <button onclick="openAddModal()" 
+                            class="btn-primary flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium text-white">
+                        <i class="fa-solid fa-plus"></i>
+                        <span class="hidden sm:inline">Tambah Pengajuan</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <main class="flex-1 overflow-auto p-6 bg-zinc-950" id="content-area">
+
+                <!-- DASHBOARD OVERVIEW -->
+                <div id="tab-0" class="tab-content active">
+                    <!-- Period Filter -->
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+                        <div>
+                            <p class="text-sm text-zinc-500">Periode data yang ditampilkan pada ringkasan di bawah ini</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-calendar-days text-zinc-500"></i>
+                            <select id="dashboard-month-filter" onchange="onDashboardMonthChange()" class="bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-emerald-500/50 min-w-[180px]">
+                                <option value="all">Semua Data</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Stat Cards - AdminLTE Style -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+                        <div class="stat-card stat-card-blue rounded-2xl p-5 text-white shadow-lg">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="text-white/70 text-xs font-medium uppercase tracking-wider">Total Pengajuan</p>
+                                    <p id="total-pengajuan" class="text-4xl font-bold mt-2">4/p>
+                                </div>
+                                <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                                    <i class="fa-solid fa-clipboard-list text-xl"></i>
+                                </div>
+                            </div>
+                            <div class="mt-4 pt-3 border-t border-white/20">
+                                <span id="periode-label" class="text-white/80 text-xs">Total seluruh pengajuan</span>
+                            </div>
+                        </div>
+
+                        <div class="stat-card stat-card-green rounded-2xl p-5 text-white shadow-lg">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="text-white/70 text-xs font-medium uppercase tracking-wider">Lengkap</p>
+                                    <p id="total-lengkap" class="text-4xl font-bold mt-2">28</p>
+                                </div>
+                                <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                                    <i class="fa-solid fa-circle-check text-xl"></i>
+                                </div>
+                            </div>
+                            <div class="mt-4 pt-3 border-t border-white/20">
+                                <span id="pct-lengkap" class="text-white font-medium text-xs">66.7%</span>
+                                <span class="text-white/60 text-xs"> dari total pengajuan</span>
+                            </div>
+                        </div>
+
+                        <div class="stat-card stat-card-yellow rounded-2xl p-5 text-white shadow-lg">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="text-white/70 text-xs font-medium uppercase tracking-wider">Verifikasi</p>
+                                    <p id="total-verifikasi" class="text-4xl font-bold mt-2">4</p>
+                                </div>
+                                <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                                    <i class="fa-solid fa-arrows-rotate text-xl"></i>
+                                </div>
+                            </div>
+                            <div class="mt-4 pt-3 border-t border-white/20">
+                                <span id="pct-verifikasi" class="text-white font-medium text-xs">9.5%</span>
+                                <span class="text-white/60 text-xs"> sedang diproses</span>
+                            </div>
+                        </div>
+
+                        <div class="stat-card stat-card-red rounded-2xl p-5 text-white shadow-lg">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="text-white/70 text-xs font-medium uppercase tracking-wider">Belum Lengkap</p>
+                                    <p id="total-belum" class="text-4xl font-bold mt-2">9</p>
+                                </div>
+                                <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                                    <i class="fa-solid fa-triangle-exclamation text-xl"></i>
+                                </div>
+                            </div>
+                            <div class="mt-4 pt-3 border-t border-white/20">
+                                <span id="pct-belum" class="text-white font-medium text-xs">21.4%</span>
+                                <span class="text-white/60 text-xs"> perlu ditindaklanjuti</span>
+                            </div>
+                        </div>
+
+                        <div class="stat-card stat-card-purple rounded-2xl p-5 text-white shadow-lg">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="text-white/70 text-xs font-medium uppercase tracking-wider">Rata-rata Kelengkapan</p>
+                                    <p id="avg-kelengkapan" class="text-4xl font-bold mt-2">81%</p>
+                                </div>
+                                <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                                    <i class="fa-solid fa-chart-pie text-xl"></i>
+                                </div>
+                            </div>
+                            <div class="mt-4 pt-3 border-t border-white/20 w-full">
+                                <div class="bg-white/20 rounded-full h-2">
+                                    <div id="avg-bar" class="bg-white h-2 rounded-full transition-all" style="width: 81%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Matrix & Recent -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="lg:col-span-2">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-semibold">Monitoring Cepat Kelengkapan</h3>
+                                <button onclick="switchTab(3)" class="text-emerald-400 text-sm flex items-center gap-1 hover:underline font-medium">
+                                    Lihat Semua <i class="fa-solid fa-arrow-right text-xs"></i>
+                                </button>
+                            </div>
+                            <div class="bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-800/50">
+                                <div class="overflow-x-auto">
+                                    <table class="w-full text-sm">
+                                        <thead>
+                                            <tr class="border-b border-zinc-800 text-xs text-zinc-500">
+                                                <th class="text-left py-4 px-5 font-medium">Perusahaan</th>
+                                                <th class="text-center py-4 px-2 font-medium">Surat</th>
+                                                <th class="text-center py-4 px-2 font-medium">Bupati</th>
+                                                <th class="text-center py-4 px-2 font-medium">PKKPR</th>
+                                                <th class="text-center py-4 px-2 font-medium">Camat</th>
+                                                <th class="text-center py-4 px-2 font-medium">Desa</th>
+                                                <th class="text-center py-4 px-2 font-medium">AHU</th>
+                                                <th class="text-center py-4 px-2 font-medium">NIB</th>
+                                                <th class="text-center py-4 px-2 font-medium">BO</th>
+                                                <th class="text-center py-4 px-5 font-medium">Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="matrix-body" class="divide-y divide-zinc-800/50">
+                                            <!-- Populated by JS -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 class="text-lg font-semibold mb-4">Pengajuan Terbaru</h3>
+                            <div class="space-y-3" id="recent-companies">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MAP TAB -->
+                <div id="tab-1" class="tab-content">
+                    <div class="bg-zinc-900 rounded-2xl p-6 border border-zinc-800/50">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                            <div>
+                                <h3 class="font-semibold text-xl">Peta Wilayah Pengajuan</h3>
+                                <p class="text-zinc-500 text-sm mt-1">Provinsi Aceh &bull; <span id="map-area-count">4</span> Area Pertambangan</p>
+                            </div>
+                            <div class="flex gap-4 text-sm bg-zinc-800/50 rounded-xl p-3">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-3 h-3 bg-emerald-500 rounded-full"></div>
+                                    <span class="text-zinc-400">Lengkap</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <div class="w-3 h-3 bg-amber-500 rounded-full"></div>
+                                    <span class="text-zinc-400">Verifikasi</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <div class="w-3 h-3 bg-red-500 rounded-full"></div>
+                                    <span class="text-zinc-400">Belum Lengkap</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="map" class="map-container rounded-xl overflow-hidden border border-zinc-700/50"></div>
+                    </div>
+                </div>
+
+                <!-- LIST TAB -->
+                <div id="tab-2" class="tab-content">
+                    <div class="bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-800/50">
+                        <div class="p-6 border-b border-zinc-800/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                            <h3 class="font-semibold text-xl">Daftar Perusahaan Pengajuan</h3>
+                            <div class="flex flex-wrap gap-3">
+                                <select id="filter-kab" onchange="filterTable()" class="bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-emerald-500/50">
+                                    <option value="">Semua Kabupaten</option>
+                                </select>
+                                <select id="filter-status" onchange="filterTable()" class="bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-emerald-500/50">
+                                    <option value="">Semua Status</option>
+                                    <option value="Lengkap">Lengkap</option>
+                                    <option value="Dalam Verifikasi">Dalam Verifikasi</option>
+                                    <option value="Belum Lengkap">Belum Lengkap</option>
+                                </select>
+                                <button onclick="exportToExcel()" class="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 px-4 py-2 rounded-xl text-sm transition-all">
+                                    <i class="fa-solid fa-file-excel text-emerald-400"></i>
+                                    <span>Export</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full" id="company-table">
+                                <thead>
+                                    <tr class="bg-zinc-950/50 border-b border-zinc-800/50 text-xs text-zinc-500">
+                                        <th class="text-left py-4 px-6 font-medium">No</th>
+                                        <th class="text-left py-4 px-4 font-medium">Nama Perusahaan</th>
+                                        <th class="text-left py-4 px-4 font-medium">Kabupaten</th>
+                                        <th class="text-left py-4 px-4 font-medium">Luas (Ha)</th>
+                                        <th class="text-left py-4 px-4 font-medium">Tanggal</th>
+                                        <th class="text-center py-4 px-4 font-medium">Kelengkapan</th>
+                                        <th class="text-center py-4 px-4 font-medium">Status</th>
+                                        <th class="text-center py-4 px-6 font-medium">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-body" class="text-sm divide-y divide-zinc-800/50">
+                                    <!-- Populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="p-4 border-t border-zinc-800/50 flex justify-between items-center text-sm text-zinc-500">
+                            <span id="table-info">Menampilkan 4 data</span>
+                            <div class="flex gap-2">
+                                <button class="px-3 py-1.5 bg-zinc-800 rounded-lg hover:bg-zinc-700 transition-colors"><i class="fa-solid fa-chevron-left"></i></button>
+                                <button class="px-3 py-1.5 bg-zinc-800 rounded-lg hover:bg-zinc-700 transition-colors"><i class="fa-solid fa-chevron-right"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MATRIX TAB -->
+                <div id="tab-3" class="tab-content">
+                    <div class="bg-zinc-900 rounded-2xl p-6 border border-zinc-800/50">
+                        <div class="flex justify-between items-center mb-6">
+                            <div>
+                                <h3 class="font-semibold text-xl">Matriks Monitoring Kelengkapan</h3>
+                                <p class="text-zinc-500 text-sm mt-1">Ringkasan status dokumen seluruh perusahaan</p>
+                            </div>
+                            <div class="flex gap-2">
+                                <button onclick="exportToExcel()" class="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 px-4 py-2 rounded-xl text-sm transition-all">
+                                    <i class="fa-solid fa-download"></i>
+                                    <span>Download Matriks</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div id="full-matrix" class="overflow-auto max-h-[650px]">
+                            <!-- Large matrix populated by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ANALITIK TAB -->
+                <div id="tab-4" class="tab-content">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="bg-zinc-900 rounded-2xl p-6 border border-zinc-800/50">
+                            <h3 class="font-semibold mb-6">Distribusi per Kabupaten</h3>
+                            <div class="space-y-5" id="kabupaten-stats">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+                        <div class="bg-zinc-900 rounded-2xl p-6 border border-zinc-800/50">
+                            <h3 class="font-semibold mb-6">Tren Pengajuan (6 Bulan)</h3>
+                            <div class="h-64">
+                                <canvas id="trendChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="bg-zinc-900 rounded-2xl p-6 border border-zinc-800/50">
+                            <h3 class="font-semibold mb-6">Distribusi Status</h3>
+                            <div class="h-64 flex items-center justify-center">
+                                <canvas id="statusChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="bg-zinc-900 rounded-2xl p-6 border border-zinc-800/50">
+                            <h3 class="font-semibold mb-6">Kelengkapan Dokumen Rata-rata</h3>
+                            <div class="h-64">
+                                <canvas id="docChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- ADD COMPANY MODAL -->
+    <div id="add-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div class="bg-zinc-900 w-full max-w-lg rounded-3xl overflow-hidden border border-zinc-700 shadow-2xl animate-slide-up">
+            <div class="px-8 py-6 border-b border-zinc-800 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center text-emerald-400">
+                        <i class="fa-solid fa-plus"></i>
+                    </div>
+                    <h2 class="text-xl font-bold">Tambah Perusahaan Baru</h2>
+                </div>
+                <button onclick="closeAddModal()" class="w-10 h-10 rounded-full bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center text-zinc-400 hover:text-white transition-all">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="p-8 space-y-5">
+                <div>
+                    <label class="block text-sm font-medium text-zinc-400 mb-2">Nama Perusahaan</label>
+                    <input type="text" id="add-name" placeholder="Contoh: PT. Tambang Emas Sejahtera"
+                           class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-zinc-400 mb-2">Tanggal Pengajuan</label>
+                    <input type="date" id="add-tanggal"
+                           class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-zinc-400 mb-2">Kabupaten/Kota</label>
+                    <select id="add-kabupaten" 
+                            class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all">
+                        <option value="">Pilih Kabupaten</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-zinc-400 mb-2">Luas Wilayah (Ha)</label>
+                    <input type="number" id="add-luas" placeholder="Contoh: 500"
+                           class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-zinc-400 mb-2">NIB</label>
+                    <input type="text" id="add-nib" placeholder="Contoh: 9120000000000"
+                           class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all">
+                </div>
+            </div>
+            <div class="border-t border-zinc-800 px-8 py-5 flex gap-3 justify-end bg-zinc-900/50">
+                <button onclick="closeAddModal()" 
+                        class="px-6 py-2.5 rounded-xl border border-zinc-700 hover:bg-zinc-800 transition-all text-sm font-medium">
+                    Batal
+                </button>
+                <button onclick="submitAddCompany()" 
+                        class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 rounded-xl flex items-center gap-2 text-sm font-medium transition-all">
+                    <i class="fa-solid fa-save"></i>
+                    Simpan
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- DETAIL MODAL -->
+    <div id="detail-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div class="bg-zinc-900 w-full max-w-4xl rounded-3xl max-h-[90vh] flex flex-col border border-zinc-700 shadow-2xl animate-slide-up">
+            <!-- Modal Header -->
+            <div class="px-8 py-6 border-b border-zinc-800 flex items-center justify-between flex-shrink-0">
+                <div class="flex items-center gap-4">
+                    <div id="modal-logo" class="w-14 h-14 rounded-2xl flex items-center justify-center overflow-hidden bg-white border border-zinc-600">
+                        <img src="logo_simadat.png" alt="SIMADAT Logo" class="w-11 h-11 object-contain">
+                    </div>
+                    <div>
+                        <h2 id="modal-company-name" class="text-2xl font-bold"></h2>
+                        <p id="modal-nib" class="text-zinc-400 text-sm font-mono mt-0.5"></p>
+                    </div>
+                </div>
+                <button onclick="closeModal()" class="w-10 h-10 rounded-full bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center text-zinc-400 hover:text-white transition-all">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body (Scrollable) -->
+            <div class="modal-body-scroll p-8 flex-1">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Info Grid -->
+                    <div class="lg:col-span-2">
+                        <div id="modal-info" class="grid grid-cols-2 gap-x-8 gap-y-5 text-sm"></div>
+                    </div>
+
+                    <!-- Status Card -->
+                    <div>
+                        <div class="bg-gradient-to-br from-zinc-800 to-zinc-900 rounded-2xl p-6 border border-zinc-700/50">
+                            <p class="text-xs uppercase tracking-widest text-zinc-500 mb-3">Kelengkapan</p>
+                            <div class="flex items-end gap-2">
+                                <span id="modal-percentage" class="text-6xl font-bold text-emerald-400"></span>
+                                <span class="text-zinc-500 mb-2 text-lg">%</span>
+                            </div>
+                            <div id="modal-status-pill" class="inline-block mt-4 px-5 py-2 text-sm rounded-full font-medium"></div>
+                            <div class="mt-6 pt-6 border-t border-zinc-700/50">
+                                <div class="flex justify-between text-sm mb-2">
+                                    <span class="text-zinc-500">Dokumen Lengkap</span>
+                                    <span id="modal-doc-complete" class="font-medium"></span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-zinc-500">Dokumen Kurang</span>
+                                    <span id="modal-doc-incomplete" class="font-medium text-red-400"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Checklist -->
+                <div class="mt-10">
+                    <h3 class="font-semibold mb-5 flex items-center gap-2 text-lg">
+                        <i class="fa-solid fa-list-check text-emerald-400"></i> 
+                        Checklist Persyaratan
+                        <span class="text-xs text-zinc-500 font-normal ml-2">(Klik untuk ceklis/non-ceklis)</span>
+                    </h3>
+                    <div id="checklist-container" class="space-y-2">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer (Always Visible) -->
+            <div class="border-t border-zinc-800 px-8 py-5 flex gap-3 justify-end bg-zinc-900/50 flex-shrink-0">
+                <button onclick="deleteCurrentCompany()" 
+                        class="px-6 py-2.5 rounded-xl border border-red-800/50 text-red-400 hover:bg-red-500/10 hover:border-red-600 transition-all text-sm font-medium flex items-center gap-2">
+                    <i class="fa-solid fa-trash"></i>
+                    Hapus
+                </button>
+                <button onclick="closeModal()" 
+                        class="px-6 py-2.5 rounded-xl border border-zinc-700 hover:bg-zinc-800 transition-all text-sm font-medium">
+                    Tutup
+                </button>
+                <button onclick="saveDetailChanges()" 
+                        class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 rounded-xl flex items-center gap-2 text-sm font-medium transition-all">
+                    <i class="fa-solid fa-save"></i>
+                    Simpan Perubahan
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- DELETE CONFIRMATION MODAL -->
+    <div id="delete-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
+        <div class="bg-zinc-900 w-full max-w-md rounded-3xl p-8 border border-red-900/50 shadow-2xl animate-slide-up text-center">
+            <div class="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fa-solid fa-triangle-exclamation text-red-400 text-2xl"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-2">Hapus Perusahaan?</h3>
+            <p class="text-zinc-400 text-sm mb-6">Apakah Anda yakin ingin menghapus <span id="delete-company-name" class="font-medium text-white"></span>? Data yang dihapus tidak dapat dikembalikan.</p>
+            <div class="flex gap-3 justify-center">
+                <button onclick="closeDeleteModal()" 
+                        class="px-6 py-2.5 rounded-xl border border-zinc-700 hover:bg-zinc-800 transition-all text-sm font-medium">
+                    Batal
+                </button>
+                <button onclick="confirmDelete()" 
+                        class="px-6 py-2.5 bg-red-600 hover:bg-red-500 rounded-xl flex items-center gap-2 text-sm font-medium transition-all text-white">
+                    <i class="fa-solid fa-trash"></i>
+                    Ya, Hapus
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="hidden fixed bottom-6 right-6 bg-zinc-900 border border-zinc-700 rounded-2xl px-6 py-4 shadow-2xl z-50 flex items-center gap-3 animate-slide-up">
+        <div id="toast-icon" class="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+            <i class="fa-solid fa-check"></i>
+        </div>
+        <div>
+            <p id="toast-title" class="font-medium text-sm">Berhasil</p>
+            <p id="toast-message" class="text-xs text-zinc-500">Operasi berhasil dilakukan</p>
+        </div>
+    </div>
+
+    <script>
+        // ==================== SUPABASE CONFIG ====================
+        // Isi URL & Anon Key project Supabase Anda di sini untuk mengaktifkan
+        // penyimpanan data permanen (online). Jika dikosongkan, dashboard akan
+        // tetap berjalan menggunakan data lokal (tersimpan di memori browser saja).
+        //
+        // Skema tabel yang dibutuhkan di Supabase (jalankan di SQL Editor):
+        //
+        // create table pengajuan (
+        //   id bigint generated always as identity primary key,
+        //   name text not null,
+        //   kab text not null,
+        //   luas numeric not null default 0,
+        //   tanggal date not null,
+        //   status text not null default 'Belum Lengkap',
+        //   kelengkapan int not null default 0,
+        //   nib text,
+        //   lat double precision,
+        //   lng double precision,
+        //   docs jsonb not null default '[]',
+        //   created_at timestamptz default now()
+        // );
+        // alter table pengajuan enable row level security;
+        // create policy "allow all" on pengajuan for all using (true) with check (true);
+        //   (Sesuaikan policy RLS di atas dengan kebutuhan keamanan production Anda)
+        //
+        const SUPABASE_URL = "";       // contoh: "https://xxxxxxxx.supabase.co"
+        const SUPABASE_ANON_KEY = "";  // contoh: "eyJhbGciOiJIUzI1NiIs..."
+        const SUPABASE_TABLE = "pengajuan";
+
+        let supabaseClient = null;
+        let useSupabase = false;
+        if (SUPABASE_URL && SUPABASE_ANON_KEY && window.supabase) {
+            try {
+                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                useSupabase = true;
+            } catch (e) {
+                console.warn('Gagal inisialisasi Supabase, menggunakan data lokal.', e);
+            }
+        }
+
+        // ==================== DATA ====================
+        const DOC_NAMES = [
+            "Surat Permohonan", "Rekomendasi Bupati", "Rekomendasi PKKPR", 
+            "Rekomendasi Camat", "Rekomendasi Geuchik", "AHU", 
+            "KTP & NPWP", "NIB", "Beneficial Ownership", "Surat Pernyataan", "RKAB Disetujui"
+        ];
+
+        const KABUPATEN = ["Aceh Besar", "Pidie", "Lhokseumawe", "Bireuen", "Aceh Utara", "Aceh Timur", "Aceh Tamiang", "Aceh Tengah"];
+
+        // Buat array dokumen checklist berdasarkan jumlah dokumen yang sudah lengkap
+        function buildDocs(completeCount, dateFilled) {
+            return DOC_NAMES.map((name, idx) => ({
+                name: name,
+                status: idx < completeCount,
+                link: "",
+                date: idx < completeCount ? dateFilled : ""
+            }));
+        }
+
+        function calcStatus(kelengkapan) {
+            if (kelengkapan === 100) return "Lengkap";
+            if (kelengkapan >= 60) return "Dalam Verifikasi";
+            return "Belum Lengkap";
+        }
+
+        // 4 data contoh (silakan hapus/edit melalui dashboard, atau hubungkan Supabase
+        // untuk data permanen dari banyak pengguna).
+        let companies = [
+            {
+                id: 1,
+                name: "PT. Aceh Mineral Sejahtera",
+                kab: "Aceh Besar",
+                luas: 850,
+                tanggal: "2026-04-10",
+                status: calcStatus(100),
+                kelengkapan: 100,
+                nib: "9120000123456",
+                lat: 5.4407,
+                lng: 95.6431,
+                docs: buildDocs(11, "2026-04-10")
+            },
+            {
+                id: 2,
+                name: "PT. Tambang Emas Pidie",
+                kab: "Pidie",
+                luas: 620,
+                tanggal: "2026-05-18",
+                status: calcStatus(73),
+                kelengkapan: 73,
+                nib: "9120000234567",
+                lat: 5.3815,
+                lng: 95.9617,
+                docs: buildDocs(8, "2026-05-18")
+            },
+            {
+                id: 3,
+                name: "CV. Sumber Mineral Lhok",
+                kab: "Lhokseumawe",
+                luas: 410,
+                tanggal: "2026-06-02",
+                status: calcStatus(36),
+                kelengkapan: 36,
+                nib: "9120000345678",
+                lat: 5.1801,
+                lng: 97.1507,
+                docs: buildDocs(4, "2026-06-02")
+            },
+            {
+                id: 4,
+                name: "PT. Batubara Aceh Utara",
+                kab: "Aceh Utara",
+                luas: 1150,
+                tanggal: "2026-03-22",
+                status: calcStatus(64),
+                kelengkapan: 64,
+                nib: "9120000456789",
+                lat: 5.0667,
+                lng: 97.3000,
+                docs: buildDocs(7, "2026-03-22")
+            }
+        ];
+        let map;
+        let charts = {};
+        let currentDetailId = null;
+        let deleteTargetId = null;
+        let dashboardMonthFilter = 'all';
+
+        // ==================== DASHBOARD MONTH FILTER ====================
+        const BULAN_ID = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+
+        function getDashboardCompanies() {
+            if (dashboardMonthFilter === 'all') return companies;
+            return companies.filter(c => (c.tanggal || '').startsWith(dashboardMonthFilter));
+        }
+
+        function populateDashboardMonthFilter() {
+            const select = document.getElementById('dashboard-month-filter');
+            const previousValue = dashboardMonthFilter;
+
+            const monthSet = new Set(
+                companies
+                    .filter(c => c.tanggal)
+                    .map(c => c.tanggal.slice(0, 7)) // "YYYY-MM"
+            );
+            const months = [...monthSet].sort((a, b) => b.localeCompare(a)); // terbaru dulu
+
+            select.innerHTML = '<option value="all">Semua Data</option>';
+            months.forEach(ym => {
+                const [year, monthNum] = ym.split('-');
+                const label = `${BULAN_ID[parseInt(monthNum, 10) - 1]} ${year}`;
+                const opt = document.createElement('option');
+                opt.value = ym;
+                opt.textContent = label;
+                select.appendChild(opt);
+            });
+
+            // Pertahankan pilihan bulan sebelumnya jika masih tersedia, jika tidak kembali ke "Semua Data"
+            if (previousValue !== 'all' && months.includes(previousValue)) {
+                select.value = previousValue;
+                dashboardMonthFilter = previousValue;
+            } else {
+                select.value = 'all';
+                dashboardMonthFilter = 'all';
+            }
+        }
+
+        function onDashboardMonthChange() {
+            dashboardMonthFilter = document.getElementById('dashboard-month-filter').value;
+            renderStats();
+            renderQuickMatrix();
+            renderRecentCompanies();
+        }
+
+        // ==================== RENDER FUNCTIONS ====================
+        function renderStats() {
+            const dashboardCompanies = getDashboardCompanies();
+            const total = dashboardCompanies.length;
+            const lengkap = dashboardCompanies.filter(c => c.status === "Lengkap").length;
+            const verif = dashboardCompanies.filter(c => c.status === "Dalam Verifikasi").length;
+            const belum = dashboardCompanies.filter(c => c.status === "Belum Lengkap").length;
+            const avg = total > 0 ? Math.round(dashboardCompanies.reduce((a, c) => a + c.kelengkapan, 0) / total) : 0;
+
+            document.getElementById('total-pengajuan').textContent = total;
+            document.getElementById('total-lengkap').textContent = lengkap;
+            document.getElementById('total-verifikasi').textContent = verif;
+            document.getElementById('total-belum').textContent = belum;
+            document.getElementById('avg-kelengkapan').textContent = avg + "%";
+            document.getElementById('avg-bar').style.width = avg + '%';
+
+            // Update percentages
+            document.getElementById('pct-lengkap').textContent = total > 0 ? ((lengkap/total)*100).toFixed(1) + '%' : '0%';
+            document.getElementById('pct-verifikasi').textContent = total > 0 ? ((verif/total)*100).toFixed(1) + '%' : '0%';
+            document.getElementById('pct-belum').textContent = total > 0 ? ((belum/total)*100).toFixed(1) + '%' : '0%';
+
+            // Label periode
+            const periodeLabel = document.getElementById('periode-label');
+            if (dashboardMonthFilter === 'all') {
+                periodeLabel.textContent = 'Total seluruh pengajuan';
+            } else {
+                const [year, monthNum] = dashboardMonthFilter.split('-');
+                periodeLabel.textContent = `Pengajuan bulan ${BULAN_ID[parseInt(monthNum, 10) - 1]} ${year}`;
+            }
+
+            // Statistik lain (peta & tabel) selalu mengikuti seluruh data
+            document.getElementById('map-area-count').textContent = companies.length;
+        }
+
+        function renderQuickMatrix() {
+            const tbody = document.getElementById('matrix-body');
+            tbody.innerHTML = '';
+
+            getDashboardCompanies().slice(0, 8).forEach(company => {
+                const tr = document.createElement('tr');
+                tr.className = "table-row cursor-pointer border-b border-zinc-800/30";
+                tr.onclick = () => showDetail(company.id);
+
+                let html = `<td class="px-5 py-4 font-medium text-zinc-200">${company.name}</td>`;
+
+                company.docs.slice(0, 8).forEach(doc => {
+                    html += `<td class="text-center py-4">
+                        <span class="inline-flex items-center justify-center w-6 h-6 rounded-full ${doc.status ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'} text-xs">
+                            <i class="fa-solid ${doc.status ? 'fa-check' : 'fa-xmark'}"></i>
+                        </span>
+                    </td>`;
+                });
+
+                const statusClass = company.status === 'Lengkap' ? 'bg-emerald-500 text-black' : 
+                                    company.status === 'Dalam Verifikasi' ? 'bg-amber-500 text-black' : 'bg-red-500 text-white';
+
+                html += `<td class="px-5 py-4">
+                    <span class="px-3 py-1 text-xs font-medium rounded-full ${statusClass}">${company.status}</span>
+                </td>`;
+
+                tr.innerHTML = html;
+                tbody.appendChild(tr);
+            });
+
+            if (getDashboardCompanies().length === 0) {
+                tbody.innerHTML = `<tr><td colspan="10" class="text-center py-8 text-zinc-500 text-sm">Tidak ada data untuk periode ini</td></tr>`;
+            }
+        }
+
+        function renderRecentCompanies() {
+            const container = document.getElementById('recent-companies');
+            container.innerHTML = '';
+
+            const dashboardCompanies = getDashboardCompanies();
+
+            if (dashboardCompanies.length === 0) {
+                container.innerHTML = `<div class="text-center py-8 text-zinc-500 text-sm bg-zinc-900 border border-zinc-800/50 rounded-2xl">Tidak ada data untuk periode ini</div>`;
+                return;
+            }
+
+            dashboardCompanies.slice(0, 5).forEach(company => {
+                const div = document.createElement('div');
+                div.className = "bg-zinc-900 border border-zinc-800/50 rounded-2xl p-5 card-hover cursor-pointer";
+                div.onclick = () => showDetail(company.id);
+
+                const statusColor = company.status === 'Lengkap' ? 'text-emerald-400' : 
+                                    company.status === 'Dalam Verifikasi' ? 'text-amber-400' : 'text-red-400';
+
+                div.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1 min-w-0">
+                            <p class="font-semibold text-sm truncate">${company.name}</p>
+                            <p class="text-xs text-zinc-500 mt-1">${company.kab} &bull; ${company.luas.toLocaleString()} Ha</p>
+                        </div>
+                        <div class="text-right ml-4">
+                            <div class="text-2xl font-bold ${statusColor}">${company.kelengkapan}%</div>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2.5 py-1 bg-zinc-800 rounded-lg text-xs text-zinc-400">${company.tanggal}</span>
+                        </div>
+                        <div class="text-xs ${statusColor} font-medium">${company.status}</div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function renderTable(filteredCompanies = companies) {
+            const tbody = document.getElementById('table-body');
+            tbody.innerHTML = '';
+
+            filteredCompanies.forEach((company, index) => {
+                const tr = document.createElement('tr');
+                tr.className = 'table-row';
+
+                const statusClass = company.status === 'Lengkap' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 
+                                    company.status === 'Dalam Verifikasi' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 
+                                    'bg-red-500/10 text-red-400 border-red-500/20';
+
+                tr.innerHTML = `
+                    <td class="py-4 px-6 text-zinc-500 cursor-pointer" onclick="showDetail(${company.id})">${index + 1}</td>
+                    <td class="py-4 px-4 font-medium text-zinc-200 cursor-pointer" onclick="showDetail(${company.id})">${company.name}</td>
+                    <td class="py-4 px-4 text-zinc-400 cursor-pointer" onclick="showDetail(${company.id})">${company.kab}</td>
+                    <td class="py-4 px-4 text-zinc-400 cursor-pointer" onclick="showDetail(${company.id})">${company.luas.toLocaleString()}</td>
+                    <td class="py-4 px-4 text-zinc-500 text-xs cursor-pointer" onclick="showDetail(${company.id})">${company.tanggal}</td>
+                    <td class="py-4 px-4 cursor-pointer" onclick="showDetail(${company.id})">
+                        <div class="flex items-center gap-3">
+                            <div class="h-2 w-20 bg-zinc-800 rounded-full overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full transition-all" style="width: ${company.kelengkapan}%"></div>
+                            </div>
+                            <span class="font-medium text-emerald-400 text-xs w-8">${company.kelengkapan}%</span>
+                        </div>
+                    </td>
+                    <td class="py-4 px-4 cursor-pointer" onclick="showDetail(${company.id})">
+                        <span class="inline-block px-3 py-1 text-xs font-medium rounded-full border ${statusClass}">
+                            ${company.status}
+                        </span>
+                    </td>
+                    <td class="py-4 px-6">
+                        <div class="flex items-center justify-center gap-1">
+                            <button onclick="event.stopImmediatePropagation(); showDetail(${company.id});" 
+                                    class="text-zinc-500 hover:text-emerald-400 transition-colors p-2 hover:bg-zinc-800 rounded-lg" title="Lihat Detail">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                            <button onclick="event.stopImmediatePropagation(); promptDelete(${company.id});" 
+                                    class="text-zinc-500 hover:text-red-400 transition-colors p-2 hover:bg-zinc-800 rounded-lg" title="Hapus">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('table-info').textContent = `Menampilkan ${filteredCompanies.length} data`;
+        }
+
+        function populateFilterKab() {
+            const select = document.getElementById('filter-kab');
+            // Clear existing options except the first
+            while (select.options.length > 1) {
+                select.remove(1);
+            }
+            const kabs = [...new Set(companies.map(c => c.kab))].sort();
+            kabs.forEach(kab => {
+                const opt = document.createElement('option');
+                opt.value = kab;
+                opt.textContent = kab;
+                select.appendChild(opt);
+            });
+        }
+
+        function populateAddKabupaten() {
+            const select = document.getElementById('add-kabupaten');
+            while (select.options.length > 1) {
+                select.remove(1);
+            }
+            KABUPATEN.forEach(kab => {
+                const opt = document.createElement('option');
+                opt.value = kab;
+                opt.textContent = kab;
+                select.appendChild(opt);
+            });
+        }
+
+        function filterTable() {
+            const kabFilter = document.getElementById('filter-kab').value;
+            const statusFilter = document.getElementById('filter-status').value;
+
+            let filtered = companies;
+            if (kabFilter) filtered = filtered.filter(c => c.kab === kabFilter);
+            if (statusFilter) filtered = filtered.filter(c => c.status === statusFilter);
+
+            renderTable(filtered);
+        }
+
+        // ==================== CHECKLIST TOGGLE ====================
+        function toggleDocStatus(companyId, docIndex) {
+            const company = companies.find(c => c.id === companyId);
+            if (!company) return;
+
+            // Toggle status
+            company.docs[docIndex].status = !company.docs[docIndex].status;
+            
+            // Update date when checked
+            if (company.docs[docIndex].status) {
+                company.docs[docIndex].date = new Date().toISOString().split('T')[0];
+            }
+
+            // Recalculate kelengkapan
+            const completedDocs = company.docs.filter(d => d.status).length;
+            company.kelengkapan = Math.round((completedDocs / company.docs.length) * 100);
+
+            // Update status
+            if (company.kelengkapan === 100) company.status = "Lengkap";
+            else if (company.kelengkapan >= 60) company.status = "Dalam Verifikasi";
+            else company.status = "Belum Lengkap";
+
+            // Re-render checklist with updated state
+            renderChecklist(company);
+
+            // Update modal stats
+            updateModalStats(company);
+        }
+
+        function updateLink(companyId, docIndex, newLink) {
+            const company = companies.find(c => c.id === companyId);
+            if (!company) return;
+            company.docs[docIndex].link = newLink;
+        }
+
+        function renderChecklist(company) {
+            const container = document.getElementById('checklist-container');
+            container.innerHTML = '';
+
+            company.docs.forEach((doc, i) => {
+                const isChecked = doc.status;
+
+                // Main row
+                const row = document.createElement('div');
+                row.className = 'check-item flex items-center justify-between bg-zinc-800/40 rounded-xl px-5 py-3.5 border border-zinc-800/50';
+
+                // Left section: checkbox + label
+                const left = document.createElement('div');
+                left.className = 'flex items-center gap-4 flex-1 min-w-0';
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.className = 'doc-checkbox';
+                checkbox.checked = isChecked;
+                checkbox.title = 'Klik untuk ceklis/non-ceklis';
+                checkbox.addEventListener('change', function(e) {
+                    e.stopPropagation();
+                    toggleDocStatus(company.id, i);
+                });
+
+                const labelDiv = document.createElement('div');
+                labelDiv.className = 'min-w-0';
+
+                const nameSpan = document.createElement('span');
+                nameSpan.className = 'text-sm ' + (isChecked ? 'text-zinc-200' : 'text-zinc-500');
+                nameSpan.textContent = doc.name;
+                labelDiv.appendChild(nameSpan);
+
+                if (isChecked && doc.date) {
+                    const dateP = document.createElement('p');
+                    dateP.className = 'text-xs text-zinc-600 mt-0.5';
+                    dateP.textContent = 'Diunggah: ' + doc.date;
+                    labelDiv.appendChild(dateP);
+                }
+
+                left.appendChild(checkbox);
+                left.appendChild(labelDiv);
+
+                // Right section: link input + open button
+                const right = document.createElement('div');
+                right.className = 'flex items-center gap-2 ml-4 flex-shrink-0';
+
+                const linkInput = document.createElement('input');
+                linkInput.type = 'text';
+                linkInput.className = 'link-edit-input';
+                linkInput.placeholder = 'https://...';
+                linkInput.value = doc.link || '';
+                linkInput.title = 'Edit link dokumen';
+                linkInput.addEventListener('change', function(e) {
+                    e.stopPropagation();
+                    updateLink(company.id, i, this.value);
+                    // Refresh just this row's button
+                    renderChecklist(company);
+                });
+                linkInput.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                });
+                right.appendChild(linkInput);
+
+                if (doc.link) {
+                    const openLink = document.createElement('a');
+                    openLink.href = doc.link;
+                    openLink.target = '_blank';
+                    openLink.className = 'text-xs bg-zinc-800 hover:bg-zinc-700 px-4 py-2 rounded-lg transition-colors border border-zinc-700 text-zinc-400 hover:text-white whitespace-nowrap';
+                    openLink.innerHTML = 'Buka <i class="fa-solid fa-arrow-up-right-from-square ml-1 text-[10px]"></i>';
+                    openLink.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                    });
+                    right.appendChild(openLink);
+                } else {
+                    const disabledSpan = document.createElement('span');
+                    disabledSpan.className = 'text-xs bg-zinc-800/50 px-4 py-2 rounded-lg border border-zinc-800 text-zinc-600 whitespace-nowrap cursor-not-allowed';
+                    disabledSpan.innerHTML = 'Buka <i class="fa-solid fa-arrow-up-right-from-square ml-1 text-[10px]"></i>';
+                    right.appendChild(disabledSpan);
+                }
+
+                row.appendChild(left);
+                row.appendChild(right);
+                container.appendChild(row);
+            });
+        }
+
+        function updateModalStats(company) {
+            document.getElementById('modal-percentage').textContent = company.kelengkapan;
+
+            const completeDocs = company.docs.filter(d => d.status).length;
+            const incompleteDocs = company.docs.length - completeDocs;
+            document.getElementById('modal-doc-complete').textContent = `${completeDocs} dokumen`;
+            document.getElementById('modal-doc-incomplete').textContent = `${incompleteDocs} dokumen`;
+
+            const statusPill = document.getElementById('modal-status-pill');
+            statusPill.textContent = company.status;
+            statusPill.className = `inline-block px-5 py-2 text-sm font-medium rounded-full ${
+                company.status === 'Lengkap' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 
+                company.status === 'Dalam Verifikasi' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 
+                'bg-red-500/20 text-red-400 border border-red-500/30'
+            }`;
+        }
+
+        // ==================== DETAIL MODAL ====================
+        function showDetail(id) {
+            const company = companies.find(c => c.id === id);
+            if (!company) return;
+
+            currentDetailId = id;
+
+            document.getElementById('modal-company-name').textContent = company.name;
+            document.getElementById('modal-nib').textContent = `NIB: ${company.nib}`;
+
+            updateModalStats(company);
+
+            document.getElementById('modal-info').innerHTML = `
+                <div><p class="text-zinc-500 text-xs mb-1">Kabupaten/Kota</p><p class="font-medium text-zinc-200">${company.kab}</p></div>
+                <div><p class="text-zinc-500 text-xs mb-1">Luas Wilayah</p><p class="font-medium text-zinc-200">${company.luas.toLocaleString()} Ha</p></div>
+                <div><p class="text-zinc-500 text-xs mb-1">Tanggal Pengajuan</p><p class="font-medium text-zinc-200">${company.tanggal}</p></div>
+                <div><p class="text-zinc-500 text-xs mb-1">Koordinat</p><p class="font-medium text-zinc-200 font-mono text-xs">${company.lat.toFixed(4)}, ${company.lng.toFixed(4)}</p></div>
+            `;
+
+            renderChecklist(company);
+
+            document.getElementById('detail-modal').classList.remove('hidden');
+            document.getElementById('detail-modal').classList.add('flex');
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('detail-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            currentDetailId = null;
+        }
+
+        function saveDetailChanges() {
+            const company = companies.find(c => c.id === currentDetailId);
+            renderStats();
+            renderTable();
+            renderQuickMatrix();
+            renderRecentCompanies();
+            populateFilterKab();
+            refreshMapMarkers();
+            closeModal();
+            showToast('Berhasil Disimpan', 'Perubahan data telah disimpan');
+
+            // Simpan perubahan checklist/link ke Supabase jika sudah dikonfigurasi
+            if (company) updateCompanySupabase(company);
+        }
+
+        // ==================== SUPABASE SYNC ====================
+        // Fungsi-fungsi ini hanya aktif (melakukan apa pun) jika SUPABASE_URL &
+        // SUPABASE_ANON_KEY di bagian atas sudah diisi. Jika kosong, dashboard
+        // tetap berjalan normal dengan data lokal (di memori browser).
+
+        function mapRowToCompany(row) {
+            return {
+                id: row.id,
+                name: row.name,
+                kab: row.kab,
+                luas: row.luas,
+                tanggal: row.tanggal,
+                status: row.status,
+                kelengkapan: row.kelengkapan,
+                nib: row.nib,
+                lat: row.lat,
+                lng: row.lng,
+                docs: row.docs || []
+            };
+        }
+
+        async function loadCompaniesFromSupabase() {
+            if (!useSupabase) return false;
+            try {
+                const { data, error } = await supabaseClient
+                    .from(SUPABASE_TABLE)
+                    .select('*')
+                    .order('tanggal', { ascending: false });
+                if (error) throw error;
+                if (data) {
+                    companies = data.map(mapRowToCompany);
+                }
+                return true;
+            } catch (e) {
+                console.error('Gagal memuat data dari Supabase:', e);
+                showToast('Koneksi Supabase Gagal', 'Menampilkan data lokal sebagai cadangan', 'error');
+                return false;
+            }
+        }
+
+        async function insertCompanySupabase(company) {
+            if (!useSupabase) return;
+            try {
+                const { data, error } = await supabaseClient
+                    .from(SUPABASE_TABLE)
+                    .insert([{
+                        name: company.name, kab: company.kab, luas: company.luas,
+                        tanggal: company.tanggal, status: company.status,
+                        kelengkapan: company.kelengkapan, nib: company.nib,
+                        lat: company.lat, lng: company.lng, docs: company.docs
+                    }])
+                    .select()
+                    .single();
+                if (error) throw error;
+                if (data) {
+                    // Ganti id sementara dengan id asli dari Supabase
+                    const idx = companies.findIndex(c => c.id === company.id);
+                    if (idx !== -1) companies[idx].id = data.id;
+                }
+            } catch (e) {
+                console.error('Gagal menyimpan ke Supabase:', e);
+                showToast('Gagal Sinkronisasi', 'Data tersimpan lokal, tapi gagal disimpan ke Supabase', 'error');
+            }
+        }
+
+        async function updateCompanySupabase(company) {
+            if (!useSupabase || !company) return;
+            try {
+                const { error } = await supabaseClient
+                    .from(SUPABASE_TABLE)
+                    .update({
+                        name: company.name, kab: company.kab, luas: company.luas,
+                        tanggal: company.tanggal, status: company.status,
+                        kelengkapan: company.kelengkapan, nib: company.nib,
+                        lat: company.lat, lng: company.lng, docs: company.docs
+                    })
+                    .eq('id', company.id);
+                if (error) throw error;
+            } catch (e) {
+                console.error('Gagal memperbarui data di Supabase:', e);
+                showToast('Gagal Sinkronisasi', 'Perubahan tersimpan lokal, tapi gagal disinkron ke Supabase', 'error');
+            }
+        }
+
+        async function deleteCompanySupabase(id) {
+            if (!useSupabase) return;
+            try {
+                const { error } = await supabaseClient.from(SUPABASE_TABLE).delete().eq('id', id);
+                if (error) throw error;
+            } catch (e) {
+                console.error('Gagal menghapus data di Supabase:', e);
+                showToast('Gagal Sinkronisasi', 'Data terhapus lokal, tapi gagal terhapus di Supabase', 'error');
+            }
+        }
+
+        // ==================== DELETE COMPANY ====================
+        function promptDelete(id) {
+            const company = companies.find(c => c.id === id);
+            if (!company) return;
+            deleteTargetId = id;
+            document.getElementById('delete-company-name').textContent = company.name;
+            document.getElementById('delete-modal').classList.remove('hidden');
+            document.getElementById('delete-modal').classList.add('flex');
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('delete-modal').classList.add('hidden');
+            document.getElementById('delete-modal').classList.remove('flex');
+            deleteTargetId = null;
+        }
+
+        function confirmDelete() {
+            if (!deleteTargetId) return;
+
+            const idToDelete = deleteTargetId;
+            companies = companies.filter(c => c.id !== idToDelete);
+            
+            // If currently viewing this company in detail modal, close it
+            if (currentDetailId === idToDelete) {
+                closeModal();
+            }
+            
+            populateDashboardMonthFilter();
+            renderStats();
+            renderTable();
+            renderQuickMatrix();
+            renderRecentCompanies();
+            populateFilterKab();
+            refreshMapMarkers();
+            
+            closeDeleteModal();
+            showToast('Berhasil Dihapus', 'Perusahaan telah dihapus dari database');
+
+            // Hapus dari Supabase jika sudah dikonfigurasi
+            deleteCompanySupabase(idToDelete);
+        }
+
+        function deleteCurrentCompany() {
+            if (currentDetailId) {
+                promptDelete(currentDetailId);
+            }
+        }
+
+        // ==================== ADD COMPANY MODAL ====================
+        function openAddModal() {
+            populateAddKabupaten();
+            document.getElementById('add-name').value = '';
+            document.getElementById('add-kabupaten').value = '';
+            document.getElementById('add-luas').value = '';
+            document.getElementById('add-nib').value = '';
+            document.getElementById('add-tanggal').value = new Date().toISOString().split('T')[0];
+            document.getElementById('add-modal').classList.remove('hidden');
+            document.getElementById('add-modal').classList.add('flex');
+        }
+
+        function closeAddModal() {
+            document.getElementById('add-modal').classList.add('hidden');
+            document.getElementById('add-modal').classList.remove('flex');
+        }
+
+        function submitAddCompany() {
+            const name = document.getElementById('add-name').value.trim();
+            const kab = document.getElementById('add-kabupaten').value;
+            const luas = parseInt(document.getElementById('add-luas').value) || 0;
+            const tanggal = document.getElementById('add-tanggal').value || new Date().toISOString().split('T')[0];
+            const nib = document.getElementById('add-nib').value.trim() || "91" + String(Math.floor(Math.random() * 9000000000000) + 1000000000000);
+
+            if (!name) {
+                showToast('Error', 'Nama perusahaan wajib diisi', 'error');
+                return;
+            }
+            if (!kab) {
+                showToast('Error', 'Kabupaten wajib dipilih', 'error');
+                return;
+            }
+            if (luas <= 0) {
+                showToast('Error', 'Luas wilayah wajib diisi', 'error');
+                return;
+            }
+            if (!tanggal) {
+                showToast('Error', 'Tanggal pengajuan wajib diisi', 'error');
+                return;
+            }
+
+            const newCompany = {
+                id: Date.now(),
+                name: name,
+                kab: kab,
+                luas: luas,
+                tanggal: tanggal,
+                status: "Belum Lengkap",
+                kelengkapan: 0,
+                nib: nib,
+                lat: 4.0 + Math.random() * 2.5,
+                lng: 95.5 + Math.random() * 2.5,
+                docs: DOC_NAMES.map(name => ({
+                    name: name,
+                    status: false,
+                    link: "",
+                    date: ""
+                }))
+            };
+
+            companies.unshift(newCompany);
+            populateDashboardMonthFilter();
+            renderStats();
+            renderTable();
+            renderQuickMatrix();
+            renderRecentCompanies();
+            populateFilterKab();
+            refreshMapMarkers();
+
+            closeAddModal();
+            showToast('Berhasil Ditambahkan', `Perusahaan "${name}" telah ditambahkan ke database`);
+
+            // Simpan ke Supabase jika sudah dikonfigurasi
+            insertCompanySupabase(newCompany);
+        }
+
+        // ==================== TOAST ====================
+        function showToast(title, message, type = 'success') {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-title').textContent = title;
+            document.getElementById('toast-message').textContent = message;
+
+            const icon = document.getElementById('toast-icon');
+            if (type === 'error') {
+                icon.className = 'w-8 h-8 rounded-full flex items-center justify-center bg-red-500/20 text-red-400';
+                icon.innerHTML = `<i class="fa-solid fa-xmark"></i>`;
+            } else if (type === 'info') {
+                icon.className = 'w-8 h-8 rounded-full flex items-center justify-center bg-amber-500/20 text-amber-400';
+                icon.innerHTML = `<i class="fa-solid fa-info"></i>`;
+            } else {
+                icon.className = 'w-8 h-8 rounded-full flex items-center justify-center bg-emerald-500/20 text-emerald-400';
+                icon.innerHTML = `<i class="fa-solid fa-check"></i>`;
+            }
+
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 3000);
+        }
+
+        // ==================== MAP ====================
+        function initMap() {
+            map = L.map('map', { zoomControl: false }).setView([5.3, 96.0], 8);
+
+            L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                subdomains: 'abcd',
+                maxZoom: 19
+            }).addTo(map);
+
+            refreshMapMarkers();
+        }
+
+        function refreshMapMarkers() {
+            if (!map) return;
+            map.eachLayer(layer => {
+                if (layer instanceof L.CircleMarker) {
+                    map.removeLayer(layer);
+                }
+            });
+
+            companies.forEach(company => {
+                const color = company.status === 'Lengkap' ? '#10b981' : 
+                              company.status === 'Dalam Verifikasi' ? '#f59e0b' : '#ef4444';
+
+                const marker = L.circleMarker([company.lat, company.lng], {
+                    radius: 10,
+                    fillColor: color,
+                    color: "#18181b",
+                    weight: 2,
+                    opacity: 1,
+                    fillOpacity: 0.85
+                }).addTo(map);
+
+                marker.bindPopup(`
+                    <div style="min-width: 200px;">
+                        <p style="font-weight: 600; margin-bottom: 4px;">${company.name}</p>
+                        <p style="font-size: 12px; color: #a1a1aa; margin-bottom: 4px;">${company.kab} &bull; ${company.luas} Ha</p>
+                        <p style="font-size: 12px; color: #34d399; font-weight: 500;">${company.kelengkapan}% lengkap</p>
+                    </div>
+                `, { className: 'custom-popup' });
+
+                marker.on('click', () => showDetail(company.id));
+            });
+        }
+
+        // ==================== CHARTS ====================
+        function getMonthlyTrend(monthsBack = 6) {
+            // Hitung jumlah pengajuan per bulan berdasarkan data tanggal asli,
+            // untuk N bulan terakhir relatif terhadap bulan ini.
+            const now = new Date();
+            const labels = [];
+            const keys = [];
+            for (let i = monthsBack - 1; i >= 0; i--) {
+                const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                keys.push(ym);
+                labels.push(`${BULAN_ID[d.getMonth()].slice(0, 3)} ${d.getFullYear()}`);
+            }
+            const data = keys.map(ym => companies.filter(c => (c.tanggal || '').startsWith(ym)).length);
+            return { labels, data };
+        }
+
+        function initCharts() {
+            // Trend Chart
+            const trendCtx = document.getElementById('trendChart').getContext('2d');
+            const trend = getMonthlyTrend(6);
+            charts.trend = new Chart(trendCtx, {
+                type: 'line',
+                data: {
+                    labels: trend.labels,
+                    datasets: [{
+                        label: 'Pengajuan',
+                        data: trend.data,
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 2,
+                        pointBackgroundColor: '#10b981',
+                        pointBorderColor: '#18181b',
+                        pointBorderWidth: 2,
+                        pointRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { grid: { color: 'rgba(63, 63, 70, 0.3)' }, ticks: { color: '#71717a' } },
+                        x: { grid: { display: false }, ticks: { color: '#71717a' } }
+                    }
+                }
+            });
+
+            // Status Chart
+            const statusCtx = document.getElementById('statusChart').getContext('2d');
+            const lengkap = companies.filter(c => c.status === 'Lengkap').length;
+            const verif = companies.filter(c => c.status === 'Dalam Verifikasi').length;
+            const belum = companies.filter(c => c.status === 'Belum Lengkap').length;
+
+            charts.status = new Chart(statusCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Lengkap', 'Verifikasi', 'Belum Lengkap'],
+                    datasets: [{
+                        data: [lengkap, verif, belum],
+                        backgroundColor: ['#10b981', '#f39c12', '#dd4b39'],
+                        borderWidth: 0,
+                        hoverOffset: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '70%',
+                    plugins: {
+                        legend: { position: 'bottom', labels: { color: '#a1a1aa', padding: 20, usePointStyle: true } }
+                    }
+                }
+            });
+
+            // Doc Chart
+            const docCtx = document.getElementById('docChart').getContext('2d');
+            const docStats = DOC_NAMES.map(name => {
+                const total = companies.length;
+                const complete = companies.filter(c => c.docs.find(d => d.name === name)?.status).length;
+                return total > 0 ? Math.round((complete / total) * 100) : 0;
+            });
+
+            charts.doc = new Chart(docCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Surat', 'Bupati', 'PKKPR', 'Camat', 'Desa', 'AHU', 'KTP', 'NIB', 'BO', 'Pernyataan', 'RKAB'],
+                    datasets: [{
+                        label: 'Kelengkapan (%)',
+                        data: docStats,
+                        backgroundColor: 'rgba(0, 192, 239, 0.7)',
+                        borderRadius: 6,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { max: 100, grid: { color: 'rgba(63, 63, 70, 0.3)' }, ticks: { color: '#71717a' } },
+                        x: { grid: { display: false }, ticks: { color: '#71717a', font: { size: 10 } } }
+                    }
+                }
+            });
+        }
+
+        function updateCharts() {
+            if (charts.trend) {
+                const trend = getMonthlyTrend(6);
+                charts.trend.data.labels = trend.labels;
+                charts.trend.data.datasets[0].data = trend.data;
+                charts.trend.update();
+            }
+            if (charts.status) {
+                const lengkap = companies.filter(c => c.status === 'Lengkap').length;
+                const verif = companies.filter(c => c.status === 'Dalam Verifikasi').length;
+                const belum = companies.filter(c => c.status === 'Belum Lengkap').length;
+                charts.status.data.datasets[0].data = [lengkap, verif, belum];
+                charts.status.update();
+            }
+            if (charts.doc) {
+                const docStats = DOC_NAMES.map(name => {
+                    const total = companies.length;
+                    const complete = companies.filter(c => c.docs.find(d => d.name === name)?.status).length;
+                    return total > 0 ? Math.round((complete / total) * 100) : 0;
+                });
+                charts.doc.data.datasets[0].data = docStats;
+                charts.doc.update();
+            }
+        }
+
+        function renderKabupatenStats() {
+            const container = document.getElementById('kabupaten-stats');
+            const stats = {};
+            companies.forEach(c => { stats[c.kab] = (stats[c.kab] || 0) + 1; });
+            const max = Math.max(...Object.values(stats), 1);
+
+            container.innerHTML = Object.entries(stats)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 6)
+                .map(([kab, count]) => {
+                    const pct = Math.round((count / max) * 100);
+                    return `
+                        <div class="flex items-center gap-4">
+                            <div class="w-28 text-sm text-zinc-400 truncate">${kab}</div>
+                            <div class="flex-1 h-2.5 bg-zinc-800 rounded-full overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full transition-all duration-1000" style="width: ${pct}%"></div>
+                            </div>
+                            <div class="w-8 text-right text-sm font-medium text-emerald-400">${count}</div>
+                        </div>
+                    `;
+                }).join('');
+        }
+
+        // ==================== NAVIGATION ====================
+        function switchTab(tabIndex) {
+            document.querySelectorAll('.nav-item').forEach((el, i) => {
+                if (i === tabIndex) {
+                    el.classList.add('active');
+                    el.classList.remove('text-zinc-400');
+                } else {
+                    el.classList.remove('active');
+                    el.classList.add('text-zinc-400');
+                }
+            });
+
+            for (let i = 0; i < 5; i++) {
+                document.getElementById(`tab-${i}`).classList.remove('active');
+            }
+            document.getElementById(`tab-${tabIndex}`).classList.add('active');
+
+            const titles = ['Dashboard Monitoring', 'Peta Wilayah Pengajuan', 'Daftar Perusahaan', 'Matriks Kelengkapan', 'Analitik & Laporan'];
+            document.getElementById('page-title').textContent = titles[tabIndex];
+
+            if (tabIndex === 1) {
+                setTimeout(() => { if(map) map.invalidateSize(); }, 100);
+            }
+            if (tabIndex === 4 && !charts.trend) {
+                setTimeout(initCharts, 100);
+            }
+            if (tabIndex === 4) {
+                renderKabupatenStats();
+                updateCharts();
+            }
+        }
+
+        // ==================== ACTIONS ====================
+        function exportToExcel() {
+            let csv = 'No,Nama Perusahaan,Kabupaten,Luas (Ha),Tanggal,Status,Kelengkapan,NIB\n';
+            companies.forEach((c, i) => {
+                csv += `${i+1},"${c.name}","${c.kab}",${c.luas},${c.tanggal},"${c.status}",${c.kelengkapan}%,"${c.nib}"\n`;
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'SIMADAT_Export_' + new Date().toISOString().split('T')[0] + '.csv';
+            link.click();
+            
+            showToast('Export Berhasil', 'Data telah diekspor ke format CSV');
+        }
+
+        function searchCompanies() {
+            const query = document.getElementById('global-search').value.toLowerCase();
+            const filtered = companies.filter(c => 
+                c.name.toLowerCase().includes(query) || 
+                c.kab.toLowerCase().includes(query) ||
+                c.nib.includes(query)
+            );
+            renderTable(filtered);
+            switchTab(2);
+        }
+
+        function logout() {
+            if (confirm("Keluar dari dashboard?")) {
+                window.location.reload();
+            }
+        }
+
+        // ==================== INIT ====================
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Jika Supabase dikonfigurasi, coba muat data online lebih dulu.
+            // Jika gagal/tidak dikonfigurasi, tetap pakai 4 data contoh lokal.
+            await loadCompaniesFromSupabase();
+            document.getElementById('live-data-text').textContent = useSupabase ? 'Terhubung Supabase' : 'Mode Lokal';
+
+            populateDashboardMonthFilter();
+            renderStats();
+            renderQuickMatrix();
+            renderRecentCompanies();
+            renderTable();
+            populateFilterKab();
+            initMap();
+
+            // Sidebar navigation
+            document.querySelectorAll('.nav-item').forEach((item, index) => {
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    switchTab(index);
+                });
+            });
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                if (e.key === "/" && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'SELECT' && document.activeElement.tagName !== 'TEXTAREA') {
+                    e.preventDefault();
+                    document.getElementById('global-search').focus();
+                }
+                if (e.key === "Escape") {
+                    closeModal();
+                    closeAddModal();
+                    closeDeleteModal();
+                }
+            });
+
+            // Close modal on backdrop click
+            document.getElementById('detail-modal').addEventListener('click', function(e) {
+                if (e.target === this) closeModal();
+            });
+            document.getElementById('add-modal').addEventListener('click', function(e) {
+                if (e.target === this) closeAddModal();
+            });
+            document.getElementById('delete-modal').addEventListener('click', function(e) {
+                if (e.target === this) closeDeleteModal();
+            });
+
+            console.log('%c SIMADAT Dashboard Ready ', 'background: #10b981; color: #000; padding: 8px 16px; border-radius: 8px; font-weight: bold;');
+        });
+    </script>
+</body>
+</html>
