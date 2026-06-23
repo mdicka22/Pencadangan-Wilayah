@@ -223,10 +223,6 @@
                         <span>Daftar Perusahaan</span>
                     </a>
                     <a href="#" data-tab="3" class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl text-slate-500 hover:text-slate-700 hover:bg-slate-100/70">
-                        <i class="fa-solid fa-table-list w-5 text-center"></i>
-                        <span>Matriks Kelengkapan</span>
-                    </a>
-                    <a href="#" data-tab="4" class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl text-slate-500 hover:text-slate-700 hover:bg-slate-100/70">
                         <i class="fa-solid fa-chart-column w-5 text-center"></i>
                         <span>Analitik & Laporan</span>
                     </a>
@@ -401,7 +397,7 @@
                         <div class="lg:col-span-2">
                             <div class="flex items-center justify-between mb-4">
                                 <h3 class="text-lg font-semibold">Monitoring Cepat Kelengkapan</h3>
-                                <button onclick="switchTab(3)" class="text-indigo-600 text-sm flex items-center gap-1 hover:underline font-medium">
+                                <button onclick="switchTab(2)" class="text-indigo-600 text-sm flex items-center gap-1 hover:underline font-medium">
                                     Lihat Semua <i class="fa-solid fa-arrow-right text-xs"></i>
                                 </button>
                             </div>
@@ -517,29 +513,8 @@
                     </div>
                 </div>
 
-                <!-- MATRIX TAB -->
-                <div id="tab-3" class="tab-content">
-                    <div class="bg-white rounded-2xl p-6 border border-slate-200/80">
-                        <div class="flex justify-between items-center mb-6">
-                            <div>
-                                <h3 class="font-semibold text-xl">Matriks Monitoring Kelengkapan</h3>
-                                <p class="text-slate-400 text-sm mt-1">Ringkasan status dokumen seluruh perusahaan</p>
-                            </div>
-                            <div class="flex gap-2">
-                                <button onclick="exportToExcel()" class="flex items-center gap-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 px-4 py-2 rounded-xl text-sm transition-all">
-                                    <i class="fa-solid fa-download"></i>
-                                    <span>Download Matriks</span>
-                                </button>
-                            </div>
-                        </div>
-                        <div id="full-matrix" class="overflow-auto max-h-[650px]">
-                            <!-- Large matrix populated by JS -->
-                        </div>
-                    </div>
-                </div>
-
                 <!-- ANALITIK TAB -->
-                <div id="tab-4" class="tab-content">
+                <div id="tab-3" class="tab-content">
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         <div class="bg-white rounded-2xl p-6 border border-slate-200/80">
                             <h3 class="font-semibold mb-6">Distribusi per Kabupaten</h3>
@@ -604,6 +579,13 @@
                     </select>
                 </div>
                 <div>
+                    <label class="block text-sm font-medium text-slate-500 mb-2">Komoditas</label>
+                    <select id="add-komoditas" 
+                            class="w-full bg-slate-100 border border-slate-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 transition-all">
+                        <option value="">Pilih Komoditas</option>
+                    </select>
+                </div>
+                <div>
                     <label class="block text-sm font-medium text-slate-500 mb-2">Luas Wilayah (Ha)</label>
                     <input type="number" id="add-luas" placeholder="Contoh: 500"
                            class="w-full bg-slate-100 border border-slate-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 transition-all">
@@ -638,8 +620,12 @@
                         <img src="logo_simadat.png" alt="SIMADAT Logo" class="w-11 h-11 object-contain">
                     </div>
                     <div>
-                        <h2 id="modal-company-name" class="text-2xl font-bold"></h2>
-                        <p id="modal-nib" class="text-slate-500 text-sm font-mono mt-0.5"></p>
+                        <input id="modal-company-name" type="text"
+                               class="text-2xl font-bold bg-transparent border-b-2 border-transparent hover:border-slate-200 focus:border-indigo-400 outline-none transition-all px-0.5 -ml-0.5 w-full"
+                               placeholder="Nama Perusahaan">
+                        <input id="modal-nib" type="text"
+                               class="text-slate-500 text-sm font-mono mt-1 bg-transparent border-b border-transparent hover:border-slate-200 focus:border-indigo-400 outline-none transition-all px-0.5 -ml-0.5 w-full"
+                               placeholder="NIB">
                     </div>
                 </div>
                 <button onclick="closeModal()" class="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 hover:text-slate-700 transition-all">
@@ -750,25 +736,8 @@
         // penyimpanan data permanen (online). Jika dikosongkan, dashboard akan
         // tetap berjalan menggunakan data lokal (tersimpan di memori browser saja).
         //
-        // Skema tabel yang dibutuhkan di Supabase (jalankan di SQL Editor):
-        //
-        // create table pengajuan (
-        //   id bigint generated always as identity primary key,
-        //   name text not null,
-        //   kab text not null,
-        //   luas numeric not null default 0,
-        //   tanggal date not null,
-        //   status text not null default 'Belum Lengkap',
-        //   kelengkapan int not null default 0,
-        //   nib text,
-        //   lat double precision,
-        //   lng double precision,
-        //   docs jsonb not null default '[]',
-        //   created_at timestamptz default now()
-        // );
-        // alter table pengajuan enable row level security;
-        // create policy "allow all" on pengajuan for all using (true) with check (true);
-        //   (Sesuaikan policy RLS di atas dengan kebutuhan keamanan production Anda)
+        // Skema tabel yang dibutuhkan ada di file terpisah: supabase.sql
+        // Jalankan isi file tersebut di Supabase Dashboard -> SQL Editor.
         //
         const SUPABASE_URL = "https://pnavlrevrdqxvpqtccuq.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBuYXZscmV2cmRxeHZwcXRjY3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxMDgyNjgsImV4cCI6MjA5NzY4NDI2OH0.IkUYEqJ4kEbT9R52zPLBp1ytTyQitFqgJIHe7h9AcnM";
@@ -789,10 +758,22 @@
         const DOC_NAMES = [
             "Surat Permohonan", "Rekomendasi Bupati", "Rekomendasi PKKPR", 
             "Rekomendasi Camat", "Rekomendasi Geuchik", "AHU", 
-            "KTP & NPWP", "NIB", "Beneficial Ownership", "Surat Pernyataan", "RKAB Disetujui"
+            "KTP & NPWP", "NIB", "Beneficial Ownership", "Surat Pernyataan", "RKAB Disetujui",
+            "Peta dan Koordinat"
         ];
 
-        const KABUPATEN = ["Aceh Besar", "Pidie", "Lhokseumawe", "Bireuen", "Aceh Utara", "Aceh Timur", "Aceh Tamiang", "Aceh Tengah"];
+        const KABUPATEN = [
+            "Aceh Barat", "Aceh Barat Daya", "Aceh Besar", "Aceh Jaya", "Aceh Selatan",
+            "Aceh Singkil", "Aceh Tamiang", "Aceh Tengah", "Aceh Tenggara", "Aceh Timur",
+            "Aceh Utara", "Bener Meriah", "Bireuen", "Gayo Lues", "Nagan Raya",
+            "Pidie", "Pidie Jaya", "Simeulue",
+            "Banda Aceh", "Langsa", "Lhokseumawe", "Sabang", "Subulussalam"
+        ];
+
+        const KOMODITAS = [
+            "Emas", "Batubara", "Bijih Besi", "Pasir Besi", "Granit", "Andesit",
+            "Pasir Kuarsa", "Batu Gamping", "Nikel", "Timah", "Mangan", "Lainnya"
+        ];
 
         // Buat array dokumen checklist berdasarkan jumlah dokumen yang sudah lengkap
         function buildDocs(completeCount, dateFilled) {
@@ -800,7 +781,8 @@
                 name: name,
                 status: idx < completeCount,
                 link: "",
-                date: idx < completeCount ? dateFilled : ""
+                date: idx < completeCount ? dateFilled : "",
+                keterangan: ""
             }));
         }
 
@@ -822,6 +804,7 @@
                 status: calcStatus(100),
                 kelengkapan: 100,
                 nib: "9120000123456",
+                komoditas: "Emas",
                 lat: 5.4407,
                 lng: 95.6431,
                 docs: buildDocs(11, "2026-04-10")
@@ -835,6 +818,7 @@
                 status: calcStatus(73),
                 kelengkapan: 73,
                 nib: "9120000234567",
+                komoditas: "Emas",
                 lat: 5.3815,
                 lng: 95.9617,
                 docs: buildDocs(8, "2026-05-18")
@@ -848,6 +832,7 @@
                 status: calcStatus(36),
                 kelengkapan: 36,
                 nib: "9120000345678",
+                komoditas: "Granit",
                 lat: 5.1801,
                 lng: 97.1507,
                 docs: buildDocs(4, "2026-06-02")
@@ -861,6 +846,7 @@
                 status: calcStatus(64),
                 kelengkapan: 64,
                 nib: "9120000456789",
+                komoditas: "Batubara",
                 lat: 5.0667,
                 lng: 97.3000,
                 docs: buildDocs(7, "2026-03-22")
@@ -1105,6 +1091,19 @@
             });
         }
 
+        function populateAddKomoditas() {
+            const select = document.getElementById('add-komoditas');
+            while (select.options.length > 1) {
+                select.remove(1);
+            }
+            KOMODITAS.forEach(item => {
+                const opt = document.createElement('option');
+                opt.value = item;
+                opt.textContent = item;
+                select.appendChild(opt);
+            });
+        }
+
         function filterTable() {
             const kabFilter = document.getElementById('filter-kab').value;
             const statusFilter = document.getElementById('filter-status').value;
@@ -1151,6 +1150,12 @@
             company.docs[docIndex].link = newLink;
         }
 
+        function updateKeterangan(companyId, docIndex, newKeterangan) {
+            const company = companies.find(c => c.id === companyId);
+            if (!company) return;
+            company.docs[docIndex].keterangan = newKeterangan;
+        }
+
         function renderChecklist(company) {
             const container = document.getElementById('checklist-container');
             container.innerHTML = '';
@@ -1160,15 +1165,15 @@
 
                 // Main row
                 const row = document.createElement('div');
-                row.className = 'check-item flex items-center justify-between bg-slate-100/60 rounded-xl px-5 py-3.5 border border-slate-200/80';
+                row.className = 'check-item flex items-start justify-between bg-slate-100/60 rounded-xl px-5 py-3.5 border border-slate-200/80 gap-4';
 
                 // Left section: checkbox + label
                 const left = document.createElement('div');
-                left.className = 'flex items-center gap-4 flex-1 min-w-0';
+                left.className = 'flex items-start gap-4 flex-1 min-w-0';
 
                 const checkbox = document.createElement('input');
                 checkbox.type = 'checkbox';
-                checkbox.className = 'doc-checkbox';
+                checkbox.className = 'doc-checkbox mt-1';
                 checkbox.checked = isChecked;
                 checkbox.title = 'Klik untuk ceklis/non-ceklis';
                 checkbox.addEventListener('change', function(e) {
@@ -1177,7 +1182,7 @@
                 });
 
                 const labelDiv = document.createElement('div');
-                labelDiv.className = 'min-w-0';
+                labelDiv.className = 'min-w-0 flex-1';
 
                 const nameSpan = document.createElement('span');
                 nameSpan.className = 'text-sm ' + (isChecked ? 'text-slate-700' : 'text-slate-400');
@@ -1191,12 +1196,27 @@
                     labelDiv.appendChild(dateP);
                 }
 
+                const ketInput = document.createElement('input');
+                ketInput.type = 'text';
+                ketInput.className = 'link-edit-input mt-2 w-full';
+                ketInput.placeholder = 'Tambah keterangan...';
+                ketInput.value = doc.keterangan || '';
+                ketInput.title = 'Catatan/keterangan untuk dokumen ini';
+                ketInput.addEventListener('change', function(e) {
+                    e.stopPropagation();
+                    updateKeterangan(company.id, i, this.value);
+                });
+                ketInput.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                });
+                labelDiv.appendChild(ketInput);
+
                 left.appendChild(checkbox);
                 left.appendChild(labelDiv);
 
                 // Right section: link input + open button
                 const right = document.createElement('div');
-                right.className = 'flex items-center gap-2 ml-4 flex-shrink-0';
+                right.className = 'flex items-center gap-2 ml-4 flex-shrink-0 mt-1';
 
                 const linkInput = document.createElement('input');
                 linkInput.type = 'text';
@@ -1256,22 +1276,49 @@
         }
 
         // ==================== DETAIL MODAL ====================
+        function buildOptionsHtml(list, selected) {
+            return list.map(item =>
+                `<option value="${item}" ${item === selected ? 'selected' : ''}>${item}</option>`
+            ).join('');
+        }
+
         function showDetail(id) {
             const company = companies.find(c => c.id === id);
             if (!company) return;
 
+            company.docs = ensureDocsComplete(company.docs);
+
             currentDetailId = id;
 
-            document.getElementById('modal-company-name').textContent = company.name;
-            document.getElementById('modal-nib').textContent = `NIB: ${company.nib}`;
+            document.getElementById('modal-company-name').value = company.name;
+            document.getElementById('modal-nib').value = company.nib;
 
             updateModalStats(company);
 
             document.getElementById('modal-info').innerHTML = `
-                <div><p class="text-slate-400 text-xs mb-1">Kabupaten/Kota</p><p class="font-medium text-slate-700">${company.kab}</p></div>
-                <div><p class="text-slate-400 text-xs mb-1">Luas Wilayah</p><p class="font-medium text-slate-700">${company.luas.toLocaleString()} Ha</p></div>
-                <div><p class="text-slate-400 text-xs mb-1">Tanggal Pengajuan</p><p class="font-medium text-slate-700">${company.tanggal}</p></div>
-                <div><p class="text-slate-400 text-xs mb-1">Koordinat</p><p class="font-medium text-slate-700 font-mono text-xs">${company.lat.toFixed(4)}, ${company.lng.toFixed(4)}</p></div>
+                <div>
+                    <p class="text-slate-400 text-xs mb-1">Kabupaten/Kota</p>
+                    <select id="modal-kab" class="font-medium text-slate-700 bg-slate-100 border border-slate-300 rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:border-indigo-500/50">
+                        ${buildOptionsHtml(KABUPATEN, company.kab)}
+                    </select>
+                </div>
+                <div>
+                    <p class="text-slate-400 text-xs mb-1">Komoditas</p>
+                    <select id="modal-komoditas" class="font-medium text-slate-700 bg-slate-100 border border-slate-300 rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:border-indigo-500/50">
+                        <option value="">Pilih Komoditas</option>
+                        ${buildOptionsHtml(KOMODITAS, company.komoditas || '')}
+                    </select>
+                </div>
+                <div>
+                    <p class="text-slate-400 text-xs mb-1">Luas Wilayah (Ha)</p>
+                    <input id="modal-luas" type="number" value="${company.luas}"
+                           class="font-medium text-slate-700 bg-slate-100 border border-slate-300 rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:border-indigo-500/50">
+                </div>
+                <div>
+                    <p class="text-slate-400 text-xs mb-1">Tanggal Pengajuan</p>
+                    <input id="modal-tanggal" type="date" value="${company.tanggal}"
+                           class="font-medium text-slate-700 bg-slate-100 border border-slate-300 rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:border-indigo-500/50">
+                </div>
             `;
 
             renderChecklist(company);
@@ -1289,6 +1336,35 @@
 
         function saveDetailChanges() {
             const company = companies.find(c => c.id === currentDetailId);
+            if (!company) return;
+
+            const newName = document.getElementById('modal-company-name').value.trim();
+            const newNib = document.getElementById('modal-nib').value.trim();
+            const newKab = document.getElementById('modal-kab').value;
+            const newKomoditas = document.getElementById('modal-komoditas').value;
+            const newLuas = parseInt(document.getElementById('modal-luas').value) || 0;
+            const newTanggal = document.getElementById('modal-tanggal').value;
+
+            if (!newName) {
+                showToast('Error', 'Nama perusahaan wajib diisi', 'error');
+                return;
+            }
+            if (newLuas <= 0) {
+                showToast('Error', 'Luas wilayah wajib diisi', 'error');
+                return;
+            }
+            if (!newTanggal) {
+                showToast('Error', 'Tanggal pengajuan wajib diisi', 'error');
+                return;
+            }
+
+            company.name = newName;
+            company.nib = newNib;
+            company.kab = newKab;
+            company.komoditas = newKomoditas;
+            company.luas = newLuas;
+            company.tanggal = newTanggal;
+
             renderStats();
             renderTable();
             renderQuickMatrix();
@@ -1298,8 +1374,8 @@
             closeModal();
             showToast('Berhasil Disimpan', 'Perubahan data telah disimpan');
 
-            // Simpan perubahan checklist/link ke Supabase jika sudah dikonfigurasi
-            if (company) updateCompanySupabase(company);
+            // Simpan perubahan ke Supabase jika sudah dikonfigurasi
+            updateCompanySupabase(company);
         }
 
         // ==================== SUPABASE SYNC ====================
@@ -1307,11 +1383,22 @@
         // SUPABASE_ANON_KEY di bagian atas sudah diisi. Jika kosong, dashboard
         // tetap berjalan normal dengan data lokal (di memori browser).
 
+        // Memastikan setiap perusahaan punya seluruh item checklist dari DOC_NAMES,
+        // termasuk item baru yang ditambahkan setelah data lama tersimpan (lokal/Supabase).
+        function ensureDocsComplete(docs) {
+            const existing = docs || [];
+            return DOC_NAMES.map(name => {
+                const found = existing.find(d => d.name === name);
+                return found || { name: name, status: false, link: "", date: "", keterangan: "" };
+            });
+        }
+
         function mapRowToCompany(row) {
             return {
                 id: row.id,
                 name: row.name,
                 kab: row.kab,
+                komoditas: row.komoditas || '',
                 luas: row.luas,
                 tanggal: row.tanggal,
                 status: row.status,
@@ -1319,7 +1406,7 @@
                 nib: row.nib,
                 lat: row.lat,
                 lng: row.lng,
-                docs: row.docs || []
+                docs: ensureDocsComplete(row.docs)
             };
         }
 
@@ -1348,7 +1435,7 @@
                 const { data, error } = await supabaseClient
                     .from(SUPABASE_TABLE)
                     .insert([{
-                        name: company.name, kab: company.kab, luas: company.luas,
+                        name: company.name, kab: company.kab, komoditas: company.komoditas, luas: company.luas,
                         tanggal: company.tanggal, status: company.status,
                         kelengkapan: company.kelengkapan, nib: company.nib,
                         lat: company.lat, lng: company.lng, docs: company.docs
@@ -1373,7 +1460,7 @@
                 const { error } = await supabaseClient
                     .from(SUPABASE_TABLE)
                     .update({
-                        name: company.name, kab: company.kab, luas: company.luas,
+                        name: company.name, kab: company.kab, komoditas: company.komoditas, luas: company.luas,
                         tanggal: company.tanggal, status: company.status,
                         kelengkapan: company.kelengkapan, nib: company.nib,
                         lat: company.lat, lng: company.lng, docs: company.docs
@@ -1448,8 +1535,10 @@
         // ==================== ADD COMPANY MODAL ====================
         function openAddModal() {
             populateAddKabupaten();
+            populateAddKomoditas();
             document.getElementById('add-name').value = '';
             document.getElementById('add-kabupaten').value = '';
+            document.getElementById('add-komoditas').value = '';
             document.getElementById('add-luas').value = '';
             document.getElementById('add-nib').value = '';
             document.getElementById('add-tanggal').value = new Date().toISOString().split('T')[0];
@@ -1465,6 +1554,7 @@
         function submitAddCompany() {
             const name = document.getElementById('add-name').value.trim();
             const kab = document.getElementById('add-kabupaten').value;
+            const komoditas = document.getElementById('add-komoditas').value;
             const luas = parseInt(document.getElementById('add-luas').value) || 0;
             const tanggal = document.getElementById('add-tanggal').value || new Date().toISOString().split('T')[0];
             const nib = document.getElementById('add-nib').value.trim() || "91" + String(Math.floor(Math.random() * 9000000000000) + 1000000000000);
@@ -1475,6 +1565,10 @@
             }
             if (!kab) {
                 showToast('Error', 'Kabupaten wajib dipilih', 'error');
+                return;
+            }
+            if (!komoditas) {
+                showToast('Error', 'Komoditas wajib dipilih', 'error');
                 return;
             }
             if (luas <= 0) {
@@ -1490,6 +1584,7 @@
                 id: Date.now(),
                 name: name,
                 kab: kab,
+                komoditas: komoditas,
                 luas: luas,
                 tanggal: tanggal,
                 status: "Belum Lengkap",
@@ -1501,7 +1596,8 @@
                     name: name,
                     status: false,
                     link: "",
-                    date: ""
+                    date: "",
+                    keterangan: ""
                 }))
             };
 
@@ -1760,21 +1856,21 @@
                 }
             });
 
-            for (let i = 0; i < 5; i++) {
+            for (let i = 0; i < 4; i++) {
                 document.getElementById(`tab-${i}`).classList.remove('active');
             }
             document.getElementById(`tab-${tabIndex}`).classList.add('active');
 
-            const titles = ['Dashboard Monitoring', 'Peta Wilayah Pengajuan', 'Daftar Perusahaan', 'Matriks Kelengkapan', 'Analitik & Laporan'];
+            const titles = ['Dashboard Monitoring', 'Peta Wilayah Pengajuan', 'Daftar Perusahaan', 'Analitik & Laporan'];
             document.getElementById('page-title').textContent = titles[tabIndex];
 
             if (tabIndex === 1) {
                 setTimeout(() => { if(map) map.invalidateSize(); }, 100);
             }
-            if (tabIndex === 4 && !charts.trend) {
+            if (tabIndex === 3 && !charts.trend) {
                 setTimeout(initCharts, 100);
             }
-            if (tabIndex === 4) {
+            if (tabIndex === 3) {
                 renderKabupatenStats();
                 updateCharts();
             }
@@ -1782,9 +1878,9 @@
 
         // ==================== ACTIONS ====================
         function exportToExcel() {
-            let csv = 'No,Nama Perusahaan,Kabupaten,Luas (Ha),Tanggal,Status,Kelengkapan,NIB\n';
+            let csv = 'No,Nama Perusahaan,Kabupaten,Komoditas,Luas (Ha),Tanggal,Status,Kelengkapan,NIB\n';
             companies.forEach((c, i) => {
-                csv += `${i+1},"${c.name}","${c.kab}",${c.luas},${c.tanggal},"${c.status}",${c.kelengkapan}%,"${c.nib}"\n`;
+                csv += `${i+1},"${c.name}","${c.kab}","${c.komoditas || ''}",${c.luas},${c.tanggal},"${c.status}",${c.kelengkapan}%,"${c.nib}"\n`;
             });
             
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
