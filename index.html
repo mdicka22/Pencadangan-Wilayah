@@ -11,33 +11,35 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Sora:wght@500;600;700;800&display=swap');
 
         :root {
-            --primary: 34 197 151;
-            --primary-dark: 16 185 129;
-            --accent: 16 185 129;
+            --primary: 109 93 246;
+            --primary-dark: 88 70 235;
+            --accent: 6 182 212;
+            --ink: #1E2333;
         }
 
-        * { scrollbar-width: thin; scrollbar-color: #3f3f46 transparent; }
+        * { scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent; }
         *::-webkit-scrollbar { width: 6px; }
         *::-webkit-scrollbar-track { background: transparent; }
-        *::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 3px; }
+        *::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
 
-        body { font-family: 'Inter', sans-serif; }
+        body { font-family: 'Inter', sans-serif; color: var(--ink); }
+        h1, h2, h3, .font-display { font-family: 'Sora', sans-serif; }
 
         .card-hover {
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .card-hover:hover {
             transform: translateY(-6px);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 20px 40px -12px rgba(99, 102, 241, 0.15);
         }
 
         .glass-panel {
-            background: rgba(39, 39, 42, 0.6);
+            background: rgba(255, 255, 255, 0.7);
             backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(226, 232, 240, 0.8);
         }
 
         .animate-fade-in { animation: fadeIn 0.5s ease-out; }
@@ -48,7 +50,7 @@
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
         .table-row { transition: all 0.2s; }
-        .table-row:hover { background-color: rgba(63, 63, 70, 0.4); }
+        .table-row:hover { background-color: rgba(99, 102, 241, 0.05); }
 
         .progress-ring { transition: stroke-dashoffset 0.8s ease-in-out; }
 
@@ -57,20 +59,20 @@
         .tab-content { display: none; }
         .tab-content.active { display: block; animation: fadeIn 0.4s ease-out; }
 
-        .nav-item { transition: all 0.3s; position: relative; overflow: hidden; }
+        .nav-item { transition: all 0.3s; position: relative; overflow: hidden; border-radius: 12px; }
         .nav-item::before {
             content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
-            background: #10b981; transform: scaleY(0); transition: transform 0.3s;
+            background: #6D5DF6; transform: scaleY(0); transition: transform 0.3s; border-radius: 0 4px 4px 0;
         }
         .nav-item.active::before { transform: scaleY(1); }
-        .nav-item.active { background: rgba(16, 185, 129, 0.1); color: #34d399; }
+        .nav-item.active { background: rgba(109, 93, 246, 0.08); color: #6D5DF6; }
 
         .status-badge {
             position: relative; overflow: hidden;
         }
         .status-badge::after {
             content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
             animation: shimmer 2s infinite;
         }
         @keyframes shimmer { 0% { left: -100%; } 100% { left: 100%; } }
@@ -82,58 +84,65 @@
         }
         .check-item:hover {
             transform: translateX(4px);
-            background: rgba(63, 63, 70, 0.6);
+            background: rgba(109, 93, 246, 0.06);
         }
 
         .search-input:focus {
-            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+            box-shadow: 0 0 0 3px rgba(109, 93, 246, 0.15);
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            background: linear-gradient(135deg, #6D5DF6 0%, #4F46E5 100%);
             transition: all 0.3s;
         }
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.4);
+            box-shadow: 0 10px 25px -5px rgba(109, 93, 246, 0.45);
         }
 
-        /* Stat Card Colors - AdminLTE Style */
+        /* Stat Card Colors - Modern SaaS: white card + colored accent bar + icon chip */
         .stat-card {
-            position: relative; overflow: hidden;
+            position: relative;
+            overflow: hidden;
+            background: #ffffff;
+            border: 1px solid #eef0f5;
         }
-        .stat-card-blue {
-            background: linear-gradient(135deg, #00c0ef 0%, #00a3c4 100%);
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 4px;
         }
-        .stat-card-green {
-            background: linear-gradient(135deg, #00a65a 0%, #008d4c 100%);
-        }
-        .stat-card-yellow {
-            background: linear-gradient(135deg, #f39c12 0%, #d68910 100%);
-        }
-        .stat-card-red {
-            background: linear-gradient(135deg, #dd4b39 0%, #c0392b 100%);
-        }
-        .stat-card-purple {
-            background: linear-gradient(135deg, #605ca8 0%, #504d93 100%);
-        }
+        .stat-card-blue::before   { background: linear-gradient(90deg, #6D5DF6, #8B7CF8); }
+        .stat-card-green::before  { background: linear-gradient(90deg, #10b981, #34d399); }
+        .stat-card-yellow::before { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+        .stat-card-red::before    { background: linear-gradient(90deg, #f43f5e, #fb7185); }
+        .stat-card-purple::before { background: linear-gradient(90deg, #06b6d4, #22d3ee); }
+
+        .icon-chip { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+        .icon-chip-blue   { background: #EEF2FF; color: #6D5DF6; }
+        .icon-chip-green  { background: #ECFDF5; color: #10b981; }
+        .icon-chip-yellow { background: #FFFBEB; color: #f59e0b; }
+        .icon-chip-red    { background: #FFF1F2; color: #f43f5e; }
+        .icon-chip-purple { background: #ECFEFF; color: #06b6d4; }
 
         .leaflet-popup-content-wrapper { 
-            background: #18181b !important; border: 1px solid #3f3f46 !important; border-radius: 16px !important; 
+            background: #ffffff !important; border: 1px solid #e2e8f0 !important; border-radius: 16px !important;
+            box-shadow: 0 10px 30px -5px rgba(30,35,51,0.15) !important;
         }
-        .leaflet-popup-tip { background: #18181b !important; }
-        .leaflet-popup-content { color: #e4e4e7 !important; font-family: 'Inter', sans-serif !important; }
+        .leaflet-popup-tip { background: #ffffff !important; }
+        .leaflet-popup-content { color: #1E2333 !important; font-family: 'Inter', sans-serif !important; }
 
         /* Modal body scroll */
         .modal-body-scroll {
             max-height: calc(80vh - 180px);
             overflow-y: auto;
             scrollbar-width: thin;
-            scrollbar-color: #3f3f46 transparent;
+            scrollbar-color: #cbd5e1 transparent;
         }
         .modal-body-scroll::-webkit-scrollbar { width: 6px; }
         .modal-body-scroll::-webkit-scrollbar-track { background: transparent; }
-        .modal-body-scroll::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 3px; }
+        .modal-body-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
 
         /* Checkbox toggle style */
         .doc-checkbox {
@@ -142,8 +151,8 @@
             width: 22px;
             height: 22px;
             border-radius: 6px;
-            border: 2px solid #52525b;
-            background: #27272a;
+            border: 2px solid #cbd5e1;
+            background: #f8fafc;
             cursor: pointer;
             position: relative;
             transition: all 0.2s;
@@ -167,34 +176,34 @@
 
         /* Link edit input */
         .link-edit-input {
-            background: #27272a;
-            border: 1px solid #3f3f46;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
             border-radius: 8px;
             padding: 4px 10px;
-            color: #a1a1aa;
+            color: #64748b;
             font-size: 12px;
             width: 200px;
             outline: none;
             transition: all 0.2s;
         }
         .link-edit-input:focus {
-            border-color: #10b981;
-            color: #e4e4e7;
+            border-color: #6D5DF6;
+            color: #1E2333;
         }
     </style>
 </head>
-<body class="bg-zinc-950 text-zinc-100 antialiased">
+<body class="bg-slate-50 text-slate-800 antialiased">
     <div class="flex h-screen overflow-hidden">
         <!-- Sidebar -->
-        <aside class="w-72 bg-zinc-900/95 border-r border-zinc-800 flex flex-col backdrop-blur-xl">
-            <div class="p-6 border-b border-zinc-800">
+        <aside class="w-72 bg-white/95 border-r border-slate-200 flex flex-col backdrop-blur-xl">
+            <div class="p-6 border-b border-slate-200">
                 <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-2xl flex items-center justify-center overflow-hidden shadow-lg shadow-emerald-500/20 bg-white">
+                    <div class="w-12 h-12 rounded-2xl flex items-center justify-center overflow-hidden shadow-lg shadow-indigo-500/20 bg-white">
                         <img src="logo_simadat.png" alt="SIMADAT Logo" class="w-10 h-10 object-contain">
                     </div>
                     <div>
                         <h1 class="text-xl font-bold tracking-tight">SIMADAT</h1>
-                        <p class="text-xs text-zinc-500 -mt-0.5">ESDM Aceh</p>
+                        <p class="text-xs text-slate-400 -mt-0.5">ESDM Aceh</p>
                     </div>
                 </div>
             </div>
@@ -205,32 +214,32 @@
                         <i class="fa-solid fa-gauge-high w-5 text-center"></i>
                         <span>Dashboard</span>
                     </a>
-                    <a href="#" data-tab="1" class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50">
+                    <a href="#" data-tab="1" class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl text-slate-500 hover:text-slate-700 hover:bg-slate-100/70">
                         <i class="fa-solid fa-map-location-dot w-5 text-center"></i>
                         <span>Peta Wilayah</span>
                     </a>
-                    <a href="#" data-tab="2" class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50">
+                    <a href="#" data-tab="2" class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl text-slate-500 hover:text-slate-700 hover:bg-slate-100/70">
                         <i class="fa-solid fa-building w-5 text-center"></i>
                         <span>Daftar Perusahaan</span>
                     </a>
-                    <a href="#" data-tab="3" class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50">
+                    <a href="#" data-tab="3" class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl text-slate-500 hover:text-slate-700 hover:bg-slate-100/70">
                         <i class="fa-solid fa-table-list w-5 text-center"></i>
                         <span>Matriks Kelengkapan</span>
                     </a>
-                    <a href="#" data-tab="4" class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50">
+                    <a href="#" data-tab="4" class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl text-slate-500 hover:text-slate-700 hover:bg-slate-100/70">
                         <i class="fa-solid fa-chart-column w-5 text-center"></i>
                         <span>Analitik & Laporan</span>
                     </a>
                 </nav>
 
                 <div class="mt-8 px-4">
-                    <p class="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-3">Menu Cepat</p>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Menu Cepat</p>
                     <div class="space-y-1">
-                        <button onclick="openAddModal()" class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-zinc-400 hover:text-emerald-400 hover:bg-zinc-800/50 transition-all">
+                        <button onclick="openAddModal()" class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-slate-500 hover:text-indigo-600 hover:bg-slate-100/70 transition-all">
                             <i class="fa-solid fa-plus w-5 text-center"></i>
                             <span>Tambah Pengajuan</span>
                         </button>
-                        <button onclick="exportToExcel()" class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-zinc-400 hover:text-emerald-400 hover:bg-zinc-800/50 transition-all">
+                        <button onclick="exportToExcel()" class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-slate-500 hover:text-indigo-600 hover:bg-slate-100/70 transition-all">
                             <i class="fa-solid fa-file-export w-5 text-center"></i>
                             <span>Export Data</span>
                         </button>
@@ -238,19 +247,19 @@
                 </div>
             </div>
 
-            <div class="p-4 border-t border-zinc-800">
-                <div class="flex items-center gap-3 bg-zinc-800/50 rounded-2xl p-3 border border-zinc-700/50">
-                    <div class="w-10 h-10 bg-gradient-to-br from-zinc-600 to-zinc-700 rounded-full flex items-center justify-center text-lg">
-                        <i class="fa-solid fa-user-tie text-zinc-300"></i>
+            <div class="p-4 border-t border-slate-200">
+                <div class="flex items-center gap-3 bg-slate-100/70 rounded-2xl p-3 border border-slate-300/70">
+                    <div class="w-10 h-10 bg-gradient-to-br from-slate-300 to-slate-400 rounded-full flex items-center justify-center text-lg">
+                        <i class="fa-solid fa-user-tie text-slate-600"></i>
                     </div>
                     <div class="flex-1 min-w-0">
                         <p class="font-medium text-sm truncate">Admin Verifikasi</p>
-                        <p class="text-xs text-emerald-400 flex items-center gap-1.5">
+                        <p class="text-xs text-emerald-600 flex items-center gap-1.5">
                             <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></span>
                             Online
                         </p>
                     </div>
-                    <button onclick="logout()" class="text-zinc-500 hover:text-red-400 transition-colors p-2">
+                    <button onclick="logout()" class="text-slate-400 hover:text-red-600 transition-colors p-2">
                         <i class="fa-solid fa-right-from-bracket"></i>
                     </button>
                 </div>
@@ -260,10 +269,10 @@
         <!-- Main Content -->
         <div class="flex-1 flex flex-col min-w-0">
             <!-- Topbar -->
-            <header class="h-16 bg-zinc-900/80 border-b border-zinc-800 px-6 flex items-center justify-between backdrop-blur-xl sticky top-0 z-40">
+            <header class="h-16 bg-white/80 border-b border-slate-200 px-6 flex items-center justify-between backdrop-blur-xl sticky top-0 z-40">
                 <div class="flex items-center gap-4">
                     <h2 id="page-title" class="text-xl font-semibold">Dashboard Monitoring</h2>
-                    <span id="live-data-badge" class="hidden md:inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/10 text-emerald-400 rounded-full text-xs font-medium border border-emerald-500/20">
+                    <span id="live-data-badge" class="hidden md:inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/10 text-emerald-600 rounded-full text-xs font-medium border border-emerald-500/20">
                         <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></span>
                         <span id="live-data-text">Mode Lokal</span>
                     </span>
@@ -274,8 +283,8 @@
                         <input type="text" id="global-search" 
                                placeholder="Cari perusahaan, NIB, atau kabupaten..." 
                                onkeyup="if(event.key === 'Enter') searchCompanies()"
-                               class="bg-zinc-800/80 border border-zinc-700 rounded-full pl-10 pr-4 py-2 w-72 focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 text-sm transition-all search-input">
-                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-2.5 text-zinc-500 text-sm"></i>
+                               class="bg-slate-100/90 border border-slate-300 rounded-full pl-10 pr-4 py-2 w-72 focus:outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 text-sm transition-all search-input">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-2.5 text-slate-400 text-sm"></i>
                     </div>
 
                     <button onclick="openAddModal()" 
@@ -287,101 +296,101 @@
             </header>
 
             <!-- Content Area -->
-            <main class="flex-1 overflow-auto p-6 bg-zinc-950" id="content-area">
+            <main class="flex-1 overflow-auto p-6 bg-slate-50" id="content-area">
 
                 <!-- DASHBOARD OVERVIEW -->
                 <div id="tab-0" class="tab-content active">
                     <!-- Period Filter -->
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
                         <div>
-                            <p class="text-sm text-zinc-500">Periode data yang ditampilkan pada ringkasan di bawah ini</p>
+                            <p class="text-sm text-slate-400">Periode data yang ditampilkan pada ringkasan di bawah ini</p>
                         </div>
                         <div class="flex items-center gap-2">
-                            <i class="fa-solid fa-calendar-days text-zinc-500"></i>
-                            <select id="dashboard-month-filter" onchange="onDashboardMonthChange()" class="bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-emerald-500/50 min-w-[180px]">
+                            <i class="fa-solid fa-calendar-days text-slate-400"></i>
+                            <select id="dashboard-month-filter" onchange="onDashboardMonthChange()" class="bg-slate-100 border border-slate-300 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-indigo-500/50 min-w-[180px]">
                                 <option value="all">Semua Data</option>
                             </select>
                         </div>
                     </div>
 
-                    <!-- Stat Cards - AdminLTE Style -->
+                    <!-- Stat Cards - Modern SaaS Style -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-                        <div class="stat-card stat-card-blue rounded-2xl p-5 text-white shadow-lg">
+                        <div class="stat-card stat-card-blue rounded-2xl p-5 shadow-sm">
                             <div class="flex justify-between items-start">
                                 <div>
-                                    <p class="text-white/70 text-xs font-medium uppercase tracking-wider">Total Pengajuan</p>
-                                    <p id="total-pengajuan" class="text-4xl font-bold mt-2">4/p>
+                                    <p class="text-slate-400 text-xs font-medium uppercase tracking-wider">Total Pengajuan</p>
+                                    <p id="total-pengajuan" class="text-4xl font-bold mt-2 text-slate-800 font-display">4</p>
                                 </div>
-                                <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                                    <i class="fa-solid fa-clipboard-list text-xl"></i>
+                                <div class="icon-chip icon-chip-blue">
+                                    <i class="fa-solid fa-clipboard-list"></i>
                                 </div>
                             </div>
-                            <div class="mt-4 pt-3 border-t border-white/20">
-                                <span id="periode-label" class="text-white/80 text-xs">Total seluruh pengajuan</span>
+                            <div class="mt-4 pt-3 border-t border-slate-100">
+                                <span id="periode-label" class="text-slate-400 text-xs">Total seluruh pengajuan</span>
                             </div>
                         </div>
 
-                        <div class="stat-card stat-card-green rounded-2xl p-5 text-white shadow-lg">
+                        <div class="stat-card stat-card-green rounded-2xl p-5 shadow-sm">
                             <div class="flex justify-between items-start">
                                 <div>
-                                    <p class="text-white/70 text-xs font-medium uppercase tracking-wider">Lengkap</p>
-                                    <p id="total-lengkap" class="text-4xl font-bold mt-2">28</p>
+                                    <p class="text-slate-400 text-xs font-medium uppercase tracking-wider">Lengkap</p>
+                                    <p id="total-lengkap" class="text-4xl font-bold mt-2 text-slate-800 font-display">28</p>
                                 </div>
-                                <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                                    <i class="fa-solid fa-circle-check text-xl"></i>
+                                <div class="icon-chip icon-chip-green">
+                                    <i class="fa-solid fa-circle-check"></i>
                                 </div>
                             </div>
-                            <div class="mt-4 pt-3 border-t border-white/20">
-                                <span id="pct-lengkap" class="text-white font-medium text-xs">66.7%</span>
-                                <span class="text-white/60 text-xs"> dari total pengajuan</span>
+                            <div class="mt-4 pt-3 border-t border-slate-100">
+                                <span id="pct-lengkap" class="text-emerald-600 font-medium text-xs">66.7%</span>
+                                <span class="text-slate-400 text-xs"> dari total pengajuan</span>
                             </div>
                         </div>
 
-                        <div class="stat-card stat-card-yellow rounded-2xl p-5 text-white shadow-lg">
+                        <div class="stat-card stat-card-yellow rounded-2xl p-5 shadow-sm">
                             <div class="flex justify-between items-start">
                                 <div>
-                                    <p class="text-white/70 text-xs font-medium uppercase tracking-wider">Verifikasi</p>
-                                    <p id="total-verifikasi" class="text-4xl font-bold mt-2">4</p>
+                                    <p class="text-slate-400 text-xs font-medium uppercase tracking-wider">Verifikasi</p>
+                                    <p id="total-verifikasi" class="text-4xl font-bold mt-2 text-slate-800 font-display">4</p>
                                 </div>
-                                <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                                    <i class="fa-solid fa-arrows-rotate text-xl"></i>
+                                <div class="icon-chip icon-chip-yellow">
+                                    <i class="fa-solid fa-arrows-rotate"></i>
                                 </div>
                             </div>
-                            <div class="mt-4 pt-3 border-t border-white/20">
-                                <span id="pct-verifikasi" class="text-white font-medium text-xs">9.5%</span>
-                                <span class="text-white/60 text-xs"> sedang diproses</span>
+                            <div class="mt-4 pt-3 border-t border-slate-100">
+                                <span id="pct-verifikasi" class="text-amber-600 font-medium text-xs">9.5%</span>
+                                <span class="text-slate-400 text-xs"> sedang diproses</span>
                             </div>
                         </div>
 
-                        <div class="stat-card stat-card-red rounded-2xl p-5 text-white shadow-lg">
+                        <div class="stat-card stat-card-red rounded-2xl p-5 shadow-sm">
                             <div class="flex justify-between items-start">
                                 <div>
-                                    <p class="text-white/70 text-xs font-medium uppercase tracking-wider">Belum Lengkap</p>
-                                    <p id="total-belum" class="text-4xl font-bold mt-2">9</p>
+                                    <p class="text-slate-400 text-xs font-medium uppercase tracking-wider">Belum Lengkap</p>
+                                    <p id="total-belum" class="text-4xl font-bold mt-2 text-slate-800 font-display">9</p>
                                 </div>
-                                <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                                    <i class="fa-solid fa-triangle-exclamation text-xl"></i>
+                                <div class="icon-chip icon-chip-red">
+                                    <i class="fa-solid fa-triangle-exclamation"></i>
                                 </div>
                             </div>
-                            <div class="mt-4 pt-3 border-t border-white/20">
-                                <span id="pct-belum" class="text-white font-medium text-xs">21.4%</span>
-                                <span class="text-white/60 text-xs"> perlu ditindaklanjuti</span>
+                            <div class="mt-4 pt-3 border-t border-slate-100">
+                                <span id="pct-belum" class="text-rose-600 font-medium text-xs">21.4%</span>
+                                <span class="text-slate-400 text-xs"> perlu ditindaklanjuti</span>
                             </div>
                         </div>
 
-                        <div class="stat-card stat-card-purple rounded-2xl p-5 text-white shadow-lg">
+                        <div class="stat-card stat-card-purple rounded-2xl p-5 shadow-sm">
                             <div class="flex justify-between items-start">
                                 <div>
-                                    <p class="text-white/70 text-xs font-medium uppercase tracking-wider">Rata-rata Kelengkapan</p>
-                                    <p id="avg-kelengkapan" class="text-4xl font-bold mt-2">81%</p>
+                                    <p class="text-slate-400 text-xs font-medium uppercase tracking-wider">Rata-rata Kelengkapan</p>
+                                    <p id="avg-kelengkapan" class="text-4xl font-bold mt-2 text-slate-800 font-display">81%</p>
                                 </div>
-                                <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                                    <i class="fa-solid fa-chart-pie text-xl"></i>
+                                <div class="icon-chip icon-chip-purple">
+                                    <i class="fa-solid fa-chart-pie"></i>
                                 </div>
                             </div>
-                            <div class="mt-4 pt-3 border-t border-white/20 w-full">
-                                <div class="bg-white/20 rounded-full h-2">
-                                    <div id="avg-bar" class="bg-white h-2 rounded-full transition-all" style="width: 81%"></div>
+                            <div class="mt-4 pt-3 border-t border-slate-100 w-full">
+                                <div class="bg-slate-100 rounded-full h-2">
+                                    <div id="avg-bar" class="bg-cyan-500 h-2 rounded-full transition-all" style="width: 81%"></div>
                                 </div>
                             </div>
                         </div>
@@ -392,15 +401,15 @@
                         <div class="lg:col-span-2">
                             <div class="flex items-center justify-between mb-4">
                                 <h3 class="text-lg font-semibold">Monitoring Cepat Kelengkapan</h3>
-                                <button onclick="switchTab(3)" class="text-emerald-400 text-sm flex items-center gap-1 hover:underline font-medium">
+                                <button onclick="switchTab(3)" class="text-indigo-600 text-sm flex items-center gap-1 hover:underline font-medium">
                                     Lihat Semua <i class="fa-solid fa-arrow-right text-xs"></i>
                                 </button>
                             </div>
-                            <div class="bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-800/50">
+                            <div class="bg-white rounded-2xl overflow-hidden border border-slate-200/80">
                                 <div class="overflow-x-auto">
                                     <table class="w-full text-sm">
                                         <thead>
-                                            <tr class="border-b border-zinc-800 text-xs text-zinc-500">
+                                            <tr class="border-b border-slate-200 text-xs text-slate-400">
                                                 <th class="text-left py-4 px-5 font-medium">Perusahaan</th>
                                                 <th class="text-center py-4 px-2 font-medium">Surat</th>
                                                 <th class="text-center py-4 px-2 font-medium">Bupati</th>
@@ -413,7 +422,7 @@
                                                 <th class="text-center py-4 px-5 font-medium">Status</th>
                                             </tr>
                                         </thead>
-                                        <tbody id="matrix-body" class="divide-y divide-zinc-800/50">
+                                        <tbody id="matrix-body" class="divide-y divide-slate-200/70">
                                             <!-- Populated by JS -->
                                         </tbody>
                                     </table>
@@ -432,48 +441,48 @@
 
                 <!-- MAP TAB -->
                 <div id="tab-1" class="tab-content">
-                    <div class="bg-zinc-900 rounded-2xl p-6 border border-zinc-800/50">
+                    <div class="bg-white rounded-2xl p-6 border border-slate-200/80">
                         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                             <div>
                                 <h3 class="font-semibold text-xl">Peta Wilayah Pengajuan</h3>
-                                <p class="text-zinc-500 text-sm mt-1">Provinsi Aceh &bull; <span id="map-area-count">4</span> Area Pertambangan</p>
+                                <p class="text-slate-400 text-sm mt-1">Provinsi Aceh &bull; <span id="map-area-count">4</span> Area Pertambangan</p>
                             </div>
-                            <div class="flex gap-4 text-sm bg-zinc-800/50 rounded-xl p-3">
+                            <div class="flex gap-4 text-sm bg-slate-100/70 rounded-xl p-3">
                                 <div class="flex items-center gap-2">
                                     <div class="w-3 h-3 bg-emerald-500 rounded-full"></div>
-                                    <span class="text-zinc-400">Lengkap</span>
+                                    <span class="text-slate-500">Lengkap</span>
                                 </div>
                                 <div class="flex items-center gap-2">
                                     <div class="w-3 h-3 bg-amber-500 rounded-full"></div>
-                                    <span class="text-zinc-400">Verifikasi</span>
+                                    <span class="text-slate-500">Verifikasi</span>
                                 </div>
                                 <div class="flex items-center gap-2">
                                     <div class="w-3 h-3 bg-red-500 rounded-full"></div>
-                                    <span class="text-zinc-400">Belum Lengkap</span>
+                                    <span class="text-slate-500">Belum Lengkap</span>
                                 </div>
                             </div>
                         </div>
-                        <div id="map" class="map-container rounded-xl overflow-hidden border border-zinc-700/50"></div>
+                        <div id="map" class="map-container rounded-xl overflow-hidden border border-slate-300/70"></div>
                     </div>
                 </div>
 
                 <!-- LIST TAB -->
                 <div id="tab-2" class="tab-content">
-                    <div class="bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-800/50">
-                        <div class="p-6 border-b border-zinc-800/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div class="bg-white rounded-2xl overflow-hidden border border-slate-200/80">
+                        <div class="p-6 border-b border-slate-200/80 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                             <h3 class="font-semibold text-xl">Daftar Perusahaan Pengajuan</h3>
                             <div class="flex flex-wrap gap-3">
-                                <select id="filter-kab" onchange="filterTable()" class="bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-emerald-500/50">
+                                <select id="filter-kab" onchange="filterTable()" class="bg-slate-100 border border-slate-300 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-indigo-500/50">
                                     <option value="">Semua Kabupaten</option>
                                 </select>
-                                <select id="filter-status" onchange="filterTable()" class="bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-emerald-500/50">
+                                <select id="filter-status" onchange="filterTable()" class="bg-slate-100 border border-slate-300 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-indigo-500/50">
                                     <option value="">Semua Status</option>
                                     <option value="Lengkap">Lengkap</option>
                                     <option value="Dalam Verifikasi">Dalam Verifikasi</option>
                                     <option value="Belum Lengkap">Belum Lengkap</option>
                                 </select>
-                                <button onclick="exportToExcel()" class="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 px-4 py-2 rounded-xl text-sm transition-all">
-                                    <i class="fa-solid fa-file-excel text-emerald-400"></i>
+                                <button onclick="exportToExcel()" class="flex items-center gap-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 px-4 py-2 rounded-xl text-sm transition-all">
+                                    <i class="fa-solid fa-file-excel text-emerald-600"></i>
                                     <span>Export</span>
                                 </button>
                             </div>
@@ -482,7 +491,7 @@
                         <div class="overflow-x-auto">
                             <table class="w-full" id="company-table">
                                 <thead>
-                                    <tr class="bg-zinc-950/50 border-b border-zinc-800/50 text-xs text-zinc-500">
+                                    <tr class="bg-slate-100/70 border-b border-slate-200/80 text-xs text-slate-400">
                                         <th class="text-left py-4 px-6 font-medium">No</th>
                                         <th class="text-left py-4 px-4 font-medium">Nama Perusahaan</th>
                                         <th class="text-left py-4 px-4 font-medium">Kabupaten</th>
@@ -493,16 +502,16 @@
                                         <th class="text-center py-4 px-6 font-medium">Aksi</th>
                                     </tr>
                                 </thead>
-                                <tbody id="table-body" class="text-sm divide-y divide-zinc-800/50">
+                                <tbody id="table-body" class="text-sm divide-y divide-slate-200/70">
                                     <!-- Populated by JS -->
                                 </tbody>
                             </table>
                         </div>
-                        <div class="p-4 border-t border-zinc-800/50 flex justify-between items-center text-sm text-zinc-500">
+                        <div class="p-4 border-t border-slate-200/80 flex justify-between items-center text-sm text-slate-400">
                             <span id="table-info">Menampilkan 4 data</span>
                             <div class="flex gap-2">
-                                <button class="px-3 py-1.5 bg-zinc-800 rounded-lg hover:bg-zinc-700 transition-colors"><i class="fa-solid fa-chevron-left"></i></button>
-                                <button class="px-3 py-1.5 bg-zinc-800 rounded-lg hover:bg-zinc-700 transition-colors"><i class="fa-solid fa-chevron-right"></i></button>
+                                <button class="px-3 py-1.5 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors"><i class="fa-solid fa-chevron-left"></i></button>
+                                <button class="px-3 py-1.5 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors"><i class="fa-solid fa-chevron-right"></i></button>
                             </div>
                         </div>
                     </div>
@@ -510,14 +519,14 @@
 
                 <!-- MATRIX TAB -->
                 <div id="tab-3" class="tab-content">
-                    <div class="bg-zinc-900 rounded-2xl p-6 border border-zinc-800/50">
+                    <div class="bg-white rounded-2xl p-6 border border-slate-200/80">
                         <div class="flex justify-between items-center mb-6">
                             <div>
                                 <h3 class="font-semibold text-xl">Matriks Monitoring Kelengkapan</h3>
-                                <p class="text-zinc-500 text-sm mt-1">Ringkasan status dokumen seluruh perusahaan</p>
+                                <p class="text-slate-400 text-sm mt-1">Ringkasan status dokumen seluruh perusahaan</p>
                             </div>
                             <div class="flex gap-2">
-                                <button onclick="exportToExcel()" class="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 px-4 py-2 rounded-xl text-sm transition-all">
+                                <button onclick="exportToExcel()" class="flex items-center gap-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 px-4 py-2 rounded-xl text-sm transition-all">
                                     <i class="fa-solid fa-download"></i>
                                     <span>Download Matriks</span>
                                 </button>
@@ -532,25 +541,25 @@
                 <!-- ANALITIK TAB -->
                 <div id="tab-4" class="tab-content">
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div class="bg-zinc-900 rounded-2xl p-6 border border-zinc-800/50">
+                        <div class="bg-white rounded-2xl p-6 border border-slate-200/80">
                             <h3 class="font-semibold mb-6">Distribusi per Kabupaten</h3>
                             <div class="space-y-5" id="kabupaten-stats">
                                 <!-- Populated by JS -->
                             </div>
                         </div>
-                        <div class="bg-zinc-900 rounded-2xl p-6 border border-zinc-800/50">
+                        <div class="bg-white rounded-2xl p-6 border border-slate-200/80">
                             <h3 class="font-semibold mb-6">Tren Pengajuan (6 Bulan)</h3>
                             <div class="h-64">
                                 <canvas id="trendChart"></canvas>
                             </div>
                         </div>
-                        <div class="bg-zinc-900 rounded-2xl p-6 border border-zinc-800/50">
+                        <div class="bg-white rounded-2xl p-6 border border-slate-200/80">
                             <h3 class="font-semibold mb-6">Distribusi Status</h3>
                             <div class="h-64 flex items-center justify-center">
                                 <canvas id="statusChart"></canvas>
                             </div>
                         </div>
-                        <div class="bg-zinc-900 rounded-2xl p-6 border border-zinc-800/50">
+                        <div class="bg-white rounded-2xl p-6 border border-slate-200/80">
                             <h3 class="font-semibold mb-6">Kelengkapan Dokumen Rata-rata</h3>
                             <div class="h-64">
                                 <canvas id="docChart"></canvas>
@@ -564,54 +573,54 @@
 
     <!-- ADD COMPANY MODAL -->
     <div id="add-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <div class="bg-zinc-900 w-full max-w-lg rounded-3xl overflow-hidden border border-zinc-700 shadow-2xl animate-slide-up">
-            <div class="px-8 py-6 border-b border-zinc-800 flex items-center justify-between">
+        <div class="bg-white w-full max-w-lg rounded-3xl overflow-hidden border border-slate-300 shadow-2xl animate-slide-up">
+            <div class="px-8 py-6 border-b border-slate-200 flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center text-emerald-400">
+                    <div class="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center text-emerald-600">
                         <i class="fa-solid fa-plus"></i>
                     </div>
                     <h2 class="text-xl font-bold">Tambah Perusahaan Baru</h2>
                 </div>
-                <button onclick="closeAddModal()" class="w-10 h-10 rounded-full bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center text-zinc-400 hover:text-white transition-all">
+                <button onclick="closeAddModal()" class="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 hover:text-slate-700 transition-all">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
             <div class="p-8 space-y-5">
                 <div>
-                    <label class="block text-sm font-medium text-zinc-400 mb-2">Nama Perusahaan</label>
+                    <label class="block text-sm font-medium text-slate-500 mb-2">Nama Perusahaan</label>
                     <input type="text" id="add-name" placeholder="Contoh: PT. Tambang Emas Sejahtera"
-                           class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all">
+                           class="w-full bg-slate-100 border border-slate-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 transition-all">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-zinc-400 mb-2">Tanggal Pengajuan</label>
+                    <label class="block text-sm font-medium text-slate-500 mb-2">Tanggal Pengajuan</label>
                     <input type="date" id="add-tanggal"
-                           class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all">
+                           class="w-full bg-slate-100 border border-slate-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 transition-all">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-zinc-400 mb-2">Kabupaten/Kota</label>
+                    <label class="block text-sm font-medium text-slate-500 mb-2">Kabupaten/Kota</label>
                     <select id="add-kabupaten" 
-                            class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all">
+                            class="w-full bg-slate-100 border border-slate-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 transition-all">
                         <option value="">Pilih Kabupaten</option>
                     </select>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-zinc-400 mb-2">Luas Wilayah (Ha)</label>
+                    <label class="block text-sm font-medium text-slate-500 mb-2">Luas Wilayah (Ha)</label>
                     <input type="number" id="add-luas" placeholder="Contoh: 500"
-                           class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all">
+                           class="w-full bg-slate-100 border border-slate-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 transition-all">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-zinc-400 mb-2">NIB</label>
+                    <label class="block text-sm font-medium text-slate-500 mb-2">NIB</label>
                     <input type="text" id="add-nib" placeholder="Contoh: 9120000000000"
-                           class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all">
+                           class="w-full bg-slate-100 border border-slate-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 transition-all">
                 </div>
             </div>
-            <div class="border-t border-zinc-800 px-8 py-5 flex gap-3 justify-end bg-zinc-900/50">
+            <div class="border-t border-slate-200 px-8 py-5 flex gap-3 justify-end bg-slate-50/80">
                 <button onclick="closeAddModal()" 
-                        class="px-6 py-2.5 rounded-xl border border-zinc-700 hover:bg-zinc-800 transition-all text-sm font-medium">
+                        class="px-6 py-2.5 rounded-xl border border-slate-300 hover:bg-slate-100 transition-all text-sm font-medium">
                     Batal
                 </button>
                 <button onclick="submitAddCompany()" 
-                        class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 rounded-xl flex items-center gap-2 text-sm font-medium transition-all">
+                        class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 rounded-xl flex items-center gap-2 text-sm font-medium transition-all">
                     <i class="fa-solid fa-save"></i>
                     Simpan
                 </button>
@@ -621,19 +630,19 @@
 
     <!-- DETAIL MODAL -->
     <div id="detail-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <div class="bg-zinc-900 w-full max-w-4xl rounded-3xl max-h-[90vh] flex flex-col border border-zinc-700 shadow-2xl animate-slide-up">
+        <div class="bg-white w-full max-w-4xl rounded-3xl max-h-[90vh] flex flex-col border border-slate-300 shadow-2xl animate-slide-up">
             <!-- Modal Header -->
-            <div class="px-8 py-6 border-b border-zinc-800 flex items-center justify-between flex-shrink-0">
+            <div class="px-8 py-6 border-b border-slate-200 flex items-center justify-between flex-shrink-0">
                 <div class="flex items-center gap-4">
-                    <div id="modal-logo" class="w-14 h-14 rounded-2xl flex items-center justify-center overflow-hidden bg-white border border-zinc-600">
+                    <div id="modal-logo" class="w-14 h-14 rounded-2xl flex items-center justify-center overflow-hidden bg-white border border-slate-300">
                         <img src="logo_simadat.png" alt="SIMADAT Logo" class="w-11 h-11 object-contain">
                     </div>
                     <div>
                         <h2 id="modal-company-name" class="text-2xl font-bold"></h2>
-                        <p id="modal-nib" class="text-zinc-400 text-sm font-mono mt-0.5"></p>
+                        <p id="modal-nib" class="text-slate-500 text-sm font-mono mt-0.5"></p>
                     </div>
                 </div>
-                <button onclick="closeModal()" class="w-10 h-10 rounded-full bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center text-zinc-400 hover:text-white transition-all">
+                <button onclick="closeModal()" class="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 hover:text-slate-700 transition-all">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
@@ -648,21 +657,21 @@
 
                     <!-- Status Card -->
                     <div>
-                        <div class="bg-gradient-to-br from-zinc-800 to-zinc-900 rounded-2xl p-6 border border-zinc-700/50">
-                            <p class="text-xs uppercase tracking-widest text-zinc-500 mb-3">Kelengkapan</p>
+                        <div class="bg-gradient-to-br from-indigo-50 to-violet-50 rounded-2xl p-6 border border-indigo-100">
+                            <p class="text-xs uppercase tracking-widest text-slate-400 mb-3">Kelengkapan</p>
                             <div class="flex items-end gap-2">
-                                <span id="modal-percentage" class="text-6xl font-bold text-emerald-400"></span>
-                                <span class="text-zinc-500 mb-2 text-lg">%</span>
+                                <span id="modal-percentage" class="text-6xl font-bold text-indigo-600 font-display"></span>
+                                <span class="text-slate-400 mb-2 text-lg">%</span>
                             </div>
                             <div id="modal-status-pill" class="inline-block mt-4 px-5 py-2 text-sm rounded-full font-medium"></div>
-                            <div class="mt-6 pt-6 border-t border-zinc-700/50">
+                            <div class="mt-6 pt-6 border-t border-indigo-100">
                                 <div class="flex justify-between text-sm mb-2">
-                                    <span class="text-zinc-500">Dokumen Lengkap</span>
-                                    <span id="modal-doc-complete" class="font-medium"></span>
+                                    <span class="text-slate-400">Dokumen Lengkap</span>
+                                    <span id="modal-doc-complete" class="font-medium text-slate-700"></span>
                                 </div>
                                 <div class="flex justify-between text-sm">
-                                    <span class="text-zinc-500">Dokumen Kurang</span>
-                                    <span id="modal-doc-incomplete" class="font-medium text-red-400"></span>
+                                    <span class="text-slate-400">Dokumen Kurang</span>
+                                    <span id="modal-doc-incomplete" class="font-medium text-red-600"></span>
                                 </div>
                             </div>
                         </div>
@@ -672,9 +681,9 @@
                 <!-- Checklist -->
                 <div class="mt-10">
                     <h3 class="font-semibold mb-5 flex items-center gap-2 text-lg">
-                        <i class="fa-solid fa-list-check text-emerald-400"></i> 
+                        <i class="fa-solid fa-list-check text-emerald-600"></i> 
                         Checklist Persyaratan
-                        <span class="text-xs text-zinc-500 font-normal ml-2">(Klik untuk ceklis/non-ceklis)</span>
+                        <span class="text-xs text-slate-400 font-normal ml-2">(Klik untuk ceklis/non-ceklis)</span>
                     </h3>
                     <div id="checklist-container" class="space-y-2">
                         <!-- Populated by JS -->
@@ -683,18 +692,18 @@
             </div>
 
             <!-- Modal Footer (Always Visible) -->
-            <div class="border-t border-zinc-800 px-8 py-5 flex gap-3 justify-end bg-zinc-900/50 flex-shrink-0">
+            <div class="border-t border-slate-200 px-8 py-5 flex gap-3 justify-end bg-slate-50/80 flex-shrink-0">
                 <button onclick="deleteCurrentCompany()" 
-                        class="px-6 py-2.5 rounded-xl border border-red-800/50 text-red-400 hover:bg-red-500/10 hover:border-red-600 transition-all text-sm font-medium flex items-center gap-2">
+                        class="px-6 py-2.5 rounded-xl border border-red-200 text-red-600 hover:bg-red-50 hover:border-red-400 transition-all text-sm font-medium flex items-center gap-2">
                     <i class="fa-solid fa-trash"></i>
                     Hapus
                 </button>
                 <button onclick="closeModal()" 
-                        class="px-6 py-2.5 rounded-xl border border-zinc-700 hover:bg-zinc-800 transition-all text-sm font-medium">
+                        class="px-6 py-2.5 rounded-xl border border-slate-300 hover:bg-slate-100 transition-all text-sm font-medium">
                     Tutup
                 </button>
                 <button onclick="saveDetailChanges()" 
-                        class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 rounded-xl flex items-center gap-2 text-sm font-medium transition-all">
+                        class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 rounded-xl flex items-center gap-2 text-sm font-medium transition-all">
                     <i class="fa-solid fa-save"></i>
                     Simpan Perubahan
                 </button>
@@ -704,15 +713,15 @@
 
     <!-- DELETE CONFIRMATION MODAL -->
     <div id="delete-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
-        <div class="bg-zinc-900 w-full max-w-md rounded-3xl p-8 border border-red-900/50 shadow-2xl animate-slide-up text-center">
+        <div class="bg-white w-full max-w-md rounded-3xl p-8 border border-red-100 shadow-2xl animate-slide-up text-center">
             <div class="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i class="fa-solid fa-triangle-exclamation text-red-400 text-2xl"></i>
+                <i class="fa-solid fa-triangle-exclamation text-red-600 text-2xl"></i>
             </div>
             <h3 class="text-xl font-bold mb-2">Hapus Perusahaan?</h3>
-            <p class="text-zinc-400 text-sm mb-6">Apakah Anda yakin ingin menghapus <span id="delete-company-name" class="font-medium text-white"></span>? Data yang dihapus tidak dapat dikembalikan.</p>
+            <p class="text-slate-500 text-sm mb-6">Apakah Anda yakin ingin menghapus <span id="delete-company-name" class="font-medium text-slate-800"></span>? Data yang dihapus tidak dapat dikembalikan.</p>
             <div class="flex gap-3 justify-center">
                 <button onclick="closeDeleteModal()" 
-                        class="px-6 py-2.5 rounded-xl border border-zinc-700 hover:bg-zinc-800 transition-all text-sm font-medium">
+                        class="px-6 py-2.5 rounded-xl border border-slate-300 hover:bg-slate-100 transition-all text-sm font-medium">
                     Batal
                 </button>
                 <button onclick="confirmDelete()" 
@@ -725,13 +734,13 @@
     </div>
 
     <!-- Toast Notification -->
-    <div id="toast" class="hidden fixed bottom-6 right-6 bg-zinc-900 border border-zinc-700 rounded-2xl px-6 py-4 shadow-2xl z-50 flex items-center gap-3 animate-slide-up">
-        <div id="toast-icon" class="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+    <div id="toast" class="hidden fixed bottom-6 right-6 bg-white border border-slate-300 rounded-2xl px-6 py-4 shadow-2xl z-50 flex items-center gap-3 animate-slide-up">
+        <div id="toast-icon" class="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-600 flex items-center justify-center">
             <i class="fa-solid fa-check"></i>
         </div>
         <div>
             <p id="toast-title" class="font-medium text-sm">Berhasil</p>
-            <p id="toast-message" class="text-xs text-zinc-500">Operasi berhasil dilakukan</p>
+            <p id="toast-message" class="text-xs text-slate-400">Operasi berhasil dilakukan</p>
         </div>
     </div>
 
@@ -761,8 +770,8 @@
         // create policy "allow all" on pengajuan for all using (true) with check (true);
         //   (Sesuaikan policy RLS di atas dengan kebutuhan keamanan production Anda)
         //
-        const SUPABASE_URL = "";       // contoh: "https://xxxxxxxx.supabase.co"
-        const SUPABASE_ANON_KEY = "";  // contoh: "eyJhbGciOiJIUzI1NiIs..."
+        const SUPABASE_URL = "https://pnavlrevrdqxvpqtccuq.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBuYXZscmV2cmRxeHZwcXRjY3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxMDgyNjgsImV4cCI6MjA5NzY4NDI2OH0.IkUYEqJ4kEbT9R52zPLBp1ytTyQitFqgJIHe7h9AcnM";
         const SUPABASE_TABLE = "pengajuan";
 
         let supabaseClient = null;
@@ -949,14 +958,14 @@
 
             getDashboardCompanies().slice(0, 8).forEach(company => {
                 const tr = document.createElement('tr');
-                tr.className = "table-row cursor-pointer border-b border-zinc-800/30";
+                tr.className = "table-row cursor-pointer border-b border-slate-200/60";
                 tr.onclick = () => showDetail(company.id);
 
-                let html = `<td class="px-5 py-4 font-medium text-zinc-200">${company.name}</td>`;
+                let html = `<td class="px-5 py-4 font-medium text-slate-700">${company.name}</td>`;
 
                 company.docs.slice(0, 8).forEach(doc => {
                     html += `<td class="text-center py-4">
-                        <span class="inline-flex items-center justify-center w-6 h-6 rounded-full ${doc.status ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'} text-xs">
+                        <span class="inline-flex items-center justify-center w-6 h-6 rounded-full ${doc.status ? 'bg-emerald-500/10 text-emerald-600' : 'bg-red-500/10 text-red-600'} text-xs">
                             <i class="fa-solid ${doc.status ? 'fa-check' : 'fa-xmark'}"></i>
                         </span>
                     </td>`;
@@ -974,7 +983,7 @@
             });
 
             if (getDashboardCompanies().length === 0) {
-                tbody.innerHTML = `<tr><td colspan="10" class="text-center py-8 text-zinc-500 text-sm">Tidak ada data untuk periode ini</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="10" class="text-center py-8 text-slate-400 text-sm">Tidak ada data untuk periode ini</td></tr>`;
             }
         }
 
@@ -985,23 +994,23 @@
             const dashboardCompanies = getDashboardCompanies();
 
             if (dashboardCompanies.length === 0) {
-                container.innerHTML = `<div class="text-center py-8 text-zinc-500 text-sm bg-zinc-900 border border-zinc-800/50 rounded-2xl">Tidak ada data untuk periode ini</div>`;
+                container.innerHTML = `<div class="text-center py-8 text-slate-400 text-sm bg-white border border-slate-200/80 rounded-2xl">Tidak ada data untuk periode ini</div>`;
                 return;
             }
 
             dashboardCompanies.slice(0, 5).forEach(company => {
                 const div = document.createElement('div');
-                div.className = "bg-zinc-900 border border-zinc-800/50 rounded-2xl p-5 card-hover cursor-pointer";
+                div.className = "bg-white border border-slate-200/80 rounded-2xl p-5 card-hover cursor-pointer";
                 div.onclick = () => showDetail(company.id);
 
-                const statusColor = company.status === 'Lengkap' ? 'text-emerald-400' : 
-                                    company.status === 'Dalam Verifikasi' ? 'text-amber-400' : 'text-red-400';
+                const statusColor = company.status === 'Lengkap' ? 'text-emerald-600' : 
+                                    company.status === 'Dalam Verifikasi' ? 'text-amber-600' : 'text-red-600';
 
                 div.innerHTML = `
                     <div class="flex justify-between items-start">
                         <div class="flex-1 min-w-0">
                             <p class="font-semibold text-sm truncate">${company.name}</p>
-                            <p class="text-xs text-zinc-500 mt-1">${company.kab} &bull; ${company.luas.toLocaleString()} Ha</p>
+                            <p class="text-xs text-slate-400 mt-1">${company.kab} &bull; ${company.luas.toLocaleString()} Ha</p>
                         </div>
                         <div class="text-right ml-4">
                             <div class="text-2xl font-bold ${statusColor}">${company.kelengkapan}%</div>
@@ -1009,7 +1018,7 @@
                     </div>
                     <div class="mt-4 flex items-center justify-between">
                         <div class="flex items-center gap-2">
-                            <span class="px-2.5 py-1 bg-zinc-800 rounded-lg text-xs text-zinc-400">${company.tanggal}</span>
+                            <span class="px-2.5 py-1 bg-slate-100 rounded-lg text-xs text-slate-500">${company.tanggal}</span>
                         </div>
                         <div class="text-xs ${statusColor} font-medium">${company.status}</div>
                     </div>
@@ -1026,22 +1035,22 @@
                 const tr = document.createElement('tr');
                 tr.className = 'table-row';
 
-                const statusClass = company.status === 'Lengkap' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 
-                                    company.status === 'Dalam Verifikasi' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 
-                                    'bg-red-500/10 text-red-400 border-red-500/20';
+                const statusClass = company.status === 'Lengkap' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' : 
+                                    company.status === 'Dalam Verifikasi' ? 'bg-amber-500/10 text-amber-600 border-amber-500/20' : 
+                                    'bg-red-500/10 text-red-600 border-red-500/20';
 
                 tr.innerHTML = `
-                    <td class="py-4 px-6 text-zinc-500 cursor-pointer" onclick="showDetail(${company.id})">${index + 1}</td>
-                    <td class="py-4 px-4 font-medium text-zinc-200 cursor-pointer" onclick="showDetail(${company.id})">${company.name}</td>
-                    <td class="py-4 px-4 text-zinc-400 cursor-pointer" onclick="showDetail(${company.id})">${company.kab}</td>
-                    <td class="py-4 px-4 text-zinc-400 cursor-pointer" onclick="showDetail(${company.id})">${company.luas.toLocaleString()}</td>
-                    <td class="py-4 px-4 text-zinc-500 text-xs cursor-pointer" onclick="showDetail(${company.id})">${company.tanggal}</td>
+                    <td class="py-4 px-6 text-slate-400 cursor-pointer" onclick="showDetail(${company.id})">${index + 1}</td>
+                    <td class="py-4 px-4 font-medium text-slate-700 cursor-pointer" onclick="showDetail(${company.id})">${company.name}</td>
+                    <td class="py-4 px-4 text-slate-500 cursor-pointer" onclick="showDetail(${company.id})">${company.kab}</td>
+                    <td class="py-4 px-4 text-slate-500 cursor-pointer" onclick="showDetail(${company.id})">${company.luas.toLocaleString()}</td>
+                    <td class="py-4 px-4 text-slate-400 text-xs cursor-pointer" onclick="showDetail(${company.id})">${company.tanggal}</td>
                     <td class="py-4 px-4 cursor-pointer" onclick="showDetail(${company.id})">
                         <div class="flex items-center gap-3">
-                            <div class="h-2 w-20 bg-zinc-800 rounded-full overflow-hidden">
+                            <div class="h-2 w-20 bg-slate-100 rounded-full overflow-hidden">
                                 <div class="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full transition-all" style="width: ${company.kelengkapan}%"></div>
                             </div>
-                            <span class="font-medium text-emerald-400 text-xs w-8">${company.kelengkapan}%</span>
+                            <span class="font-medium text-emerald-600 text-xs w-8">${company.kelengkapan}%</span>
                         </div>
                     </td>
                     <td class="py-4 px-4 cursor-pointer" onclick="showDetail(${company.id})">
@@ -1052,11 +1061,11 @@
                     <td class="py-4 px-6">
                         <div class="flex items-center justify-center gap-1">
                             <button onclick="event.stopImmediatePropagation(); showDetail(${company.id});" 
-                                    class="text-zinc-500 hover:text-emerald-400 transition-colors p-2 hover:bg-zinc-800 rounded-lg" title="Lihat Detail">
+                                    class="text-slate-400 hover:text-indigo-600 transition-colors p-2 hover:bg-slate-100 rounded-lg" title="Lihat Detail">
                                 <i class="fa-solid fa-eye"></i>
                             </button>
                             <button onclick="event.stopImmediatePropagation(); promptDelete(${company.id});" 
-                                    class="text-zinc-500 hover:text-red-400 transition-colors p-2 hover:bg-zinc-800 rounded-lg" title="Hapus">
+                                    class="text-slate-400 hover:text-red-600 transition-colors p-2 hover:bg-slate-100 rounded-lg" title="Hapus">
                                 <i class="fa-solid fa-trash"></i>
                             </button>
                         </div>
@@ -1151,7 +1160,7 @@
 
                 // Main row
                 const row = document.createElement('div');
-                row.className = 'check-item flex items-center justify-between bg-zinc-800/40 rounded-xl px-5 py-3.5 border border-zinc-800/50';
+                row.className = 'check-item flex items-center justify-between bg-slate-100/60 rounded-xl px-5 py-3.5 border border-slate-200/80';
 
                 // Left section: checkbox + label
                 const left = document.createElement('div');
@@ -1171,13 +1180,13 @@
                 labelDiv.className = 'min-w-0';
 
                 const nameSpan = document.createElement('span');
-                nameSpan.className = 'text-sm ' + (isChecked ? 'text-zinc-200' : 'text-zinc-500');
+                nameSpan.className = 'text-sm ' + (isChecked ? 'text-slate-700' : 'text-slate-400');
                 nameSpan.textContent = doc.name;
                 labelDiv.appendChild(nameSpan);
 
                 if (isChecked && doc.date) {
                     const dateP = document.createElement('p');
-                    dateP.className = 'text-xs text-zinc-600 mt-0.5';
+                    dateP.className = 'text-xs text-slate-400 mt-0.5';
                     dateP.textContent = 'Diunggah: ' + doc.date;
                     labelDiv.appendChild(dateP);
                 }
@@ -1210,7 +1219,7 @@
                     const openLink = document.createElement('a');
                     openLink.href = doc.link;
                     openLink.target = '_blank';
-                    openLink.className = 'text-xs bg-zinc-800 hover:bg-zinc-700 px-4 py-2 rounded-lg transition-colors border border-zinc-700 text-zinc-400 hover:text-white whitespace-nowrap';
+                    openLink.className = 'text-xs bg-slate-100 hover:bg-slate-200 px-4 py-2 rounded-lg transition-colors border border-slate-300 text-slate-500 hover:text-indigo-600 whitespace-nowrap';
                     openLink.innerHTML = 'Buka <i class="fa-solid fa-arrow-up-right-from-square ml-1 text-[10px]"></i>';
                     openLink.addEventListener('click', function(e) {
                         e.stopPropagation();
@@ -1218,7 +1227,7 @@
                     right.appendChild(openLink);
                 } else {
                     const disabledSpan = document.createElement('span');
-                    disabledSpan.className = 'text-xs bg-zinc-800/50 px-4 py-2 rounded-lg border border-zinc-800 text-zinc-600 whitespace-nowrap cursor-not-allowed';
+                    disabledSpan.className = 'text-xs bg-slate-100/70 px-4 py-2 rounded-lg border border-slate-200 text-slate-400 whitespace-nowrap cursor-not-allowed';
                     disabledSpan.innerHTML = 'Buka <i class="fa-solid fa-arrow-up-right-from-square ml-1 text-[10px]"></i>';
                     right.appendChild(disabledSpan);
                 }
@@ -1240,9 +1249,9 @@
             const statusPill = document.getElementById('modal-status-pill');
             statusPill.textContent = company.status;
             statusPill.className = `inline-block px-5 py-2 text-sm font-medium rounded-full ${
-                company.status === 'Lengkap' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 
-                company.status === 'Dalam Verifikasi' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 
-                'bg-red-500/20 text-red-400 border border-red-500/30'
+                company.status === 'Lengkap' ? 'bg-emerald-500/20 text-emerald-600 border border-emerald-500/30' : 
+                company.status === 'Dalam Verifikasi' ? 'bg-amber-500/20 text-amber-600 border border-amber-500/30' : 
+                'bg-red-500/20 text-red-600 border border-red-500/30'
             }`;
         }
 
@@ -1259,10 +1268,10 @@
             updateModalStats(company);
 
             document.getElementById('modal-info').innerHTML = `
-                <div><p class="text-zinc-500 text-xs mb-1">Kabupaten/Kota</p><p class="font-medium text-zinc-200">${company.kab}</p></div>
-                <div><p class="text-zinc-500 text-xs mb-1">Luas Wilayah</p><p class="font-medium text-zinc-200">${company.luas.toLocaleString()} Ha</p></div>
-                <div><p class="text-zinc-500 text-xs mb-1">Tanggal Pengajuan</p><p class="font-medium text-zinc-200">${company.tanggal}</p></div>
-                <div><p class="text-zinc-500 text-xs mb-1">Koordinat</p><p class="font-medium text-zinc-200 font-mono text-xs">${company.lat.toFixed(4)}, ${company.lng.toFixed(4)}</p></div>
+                <div><p class="text-slate-400 text-xs mb-1">Kabupaten/Kota</p><p class="font-medium text-slate-700">${company.kab}</p></div>
+                <div><p class="text-slate-400 text-xs mb-1">Luas Wilayah</p><p class="font-medium text-slate-700">${company.luas.toLocaleString()} Ha</p></div>
+                <div><p class="text-slate-400 text-xs mb-1">Tanggal Pengajuan</p><p class="font-medium text-slate-700">${company.tanggal}</p></div>
+                <div><p class="text-slate-400 text-xs mb-1">Koordinat</p><p class="font-medium text-slate-700 font-mono text-xs">${company.lat.toFixed(4)}, ${company.lng.toFixed(4)}</p></div>
             `;
 
             renderChecklist(company);
@@ -1520,13 +1529,13 @@
 
             const icon = document.getElementById('toast-icon');
             if (type === 'error') {
-                icon.className = 'w-8 h-8 rounded-full flex items-center justify-center bg-red-500/20 text-red-400';
+                icon.className = 'w-8 h-8 rounded-full flex items-center justify-center bg-red-500/20 text-red-600';
                 icon.innerHTML = `<i class="fa-solid fa-xmark"></i>`;
             } else if (type === 'info') {
-                icon.className = 'w-8 h-8 rounded-full flex items-center justify-center bg-amber-500/20 text-amber-400';
+                icon.className = 'w-8 h-8 rounded-full flex items-center justify-center bg-amber-500/20 text-amber-600';
                 icon.innerHTML = `<i class="fa-solid fa-info"></i>`;
             } else {
-                icon.className = 'w-8 h-8 rounded-full flex items-center justify-center bg-emerald-500/20 text-emerald-400';
+                icon.className = 'w-8 h-8 rounded-full flex items-center justify-center bg-emerald-500/20 text-emerald-600';
                 icon.innerHTML = `<i class="fa-solid fa-check"></i>`;
             }
 
@@ -1540,7 +1549,7 @@
 
             L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
                 subdomains: 'abcd',
                 maxZoom: 19
@@ -1564,7 +1573,7 @@
                 const marker = L.circleMarker([company.lat, company.lng], {
                     radius: 10,
                     fillColor: color,
-                    color: "#18181b",
+                    color: "#ffffff",
                     weight: 2,
                     opacity: 1,
                     fillOpacity: 0.85
@@ -1573,7 +1582,7 @@
                 marker.bindPopup(`
                     <div style="min-width: 200px;">
                         <p style="font-weight: 600; margin-bottom: 4px;">${company.name}</p>
-                        <p style="font-size: 12px; color: #a1a1aa; margin-bottom: 4px;">${company.kab} &bull; ${company.luas} Ha</p>
+                        <p style="font-size: 12px; color: #64748b; margin-bottom: 4px;">${company.kab} &bull; ${company.luas} Ha</p>
                         <p style="font-size: 12px; color: #34d399; font-weight: 500;">${company.kelengkapan}% lengkap</p>
                     </div>
                 `, { className: 'custom-popup' });
@@ -1616,7 +1625,7 @@
                         tension: 0.4,
                         borderWidth: 2,
                         pointBackgroundColor: '#10b981',
-                        pointBorderColor: '#18181b',
+                        pointBorderColor: '#ffffff',
                         pointBorderWidth: 2,
                         pointRadius: 4
                     }]
@@ -1626,8 +1635,8 @@
                     maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
                     scales: {
-                        y: { grid: { color: 'rgba(63, 63, 70, 0.3)' }, ticks: { color: '#71717a' } },
-                        x: { grid: { display: false }, ticks: { color: '#71717a' } }
+                        y: { grid: { color: 'rgba(226, 232, 240, 0.7)' }, ticks: { color: '#64748b' } },
+                        x: { grid: { display: false }, ticks: { color: '#64748b' } }
                     }
                 }
             });
@@ -1644,7 +1653,7 @@
                     labels: ['Lengkap', 'Verifikasi', 'Belum Lengkap'],
                     datasets: [{
                         data: [lengkap, verif, belum],
-                        backgroundColor: ['#10b981', '#f39c12', '#dd4b39'],
+                        backgroundColor: ['#10b981', '#f59e0b', '#f43f5e'],
                         borderWidth: 0,
                         hoverOffset: 8
                     }]
@@ -1654,7 +1663,7 @@
                     maintainAspectRatio: false,
                     cutout: '70%',
                     plugins: {
-                        legend: { position: 'bottom', labels: { color: '#a1a1aa', padding: 20, usePointStyle: true } }
+                        legend: { position: 'bottom', labels: { color: '#475569', padding: 20, usePointStyle: true } }
                     }
                 }
             });
@@ -1674,7 +1683,7 @@
                     datasets: [{
                         label: 'Kelengkapan (%)',
                         data: docStats,
-                        backgroundColor: 'rgba(0, 192, 239, 0.7)',
+                        backgroundColor: 'rgba(109, 93, 246, 0.75)',
                         borderRadius: 6,
                         borderSkipped: false
                     }]
@@ -1684,8 +1693,8 @@
                     maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
                     scales: {
-                        y: { max: 100, grid: { color: 'rgba(63, 63, 70, 0.3)' }, ticks: { color: '#71717a' } },
-                        x: { grid: { display: false }, ticks: { color: '#71717a', font: { size: 10 } } }
+                        y: { max: 100, grid: { color: 'rgba(226, 232, 240, 0.7)' }, ticks: { color: '#64748b' } },
+                        x: { grid: { display: false }, ticks: { color: '#64748b', font: { size: 10 } } }
                     }
                 }
             });
@@ -1729,11 +1738,11 @@
                     const pct = Math.round((count / max) * 100);
                     return `
                         <div class="flex items-center gap-4">
-                            <div class="w-28 text-sm text-zinc-400 truncate">${kab}</div>
-                            <div class="flex-1 h-2.5 bg-zinc-800 rounded-full overflow-hidden">
+                            <div class="w-28 text-sm text-slate-500 truncate">${kab}</div>
+                            <div class="flex-1 h-2.5 bg-slate-100 rounded-full overflow-hidden">
                                 <div class="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full transition-all duration-1000" style="width: ${pct}%"></div>
                             </div>
-                            <div class="w-8 text-right text-sm font-medium text-emerald-400">${count}</div>
+                            <div class="w-8 text-right text-sm font-medium text-emerald-600">${count}</div>
                         </div>
                     `;
                 }).join('');
@@ -1744,10 +1753,10 @@
             document.querySelectorAll('.nav-item').forEach((el, i) => {
                 if (i === tabIndex) {
                     el.classList.add('active');
-                    el.classList.remove('text-zinc-400');
+                    el.classList.remove('text-slate-500');
                 } else {
                     el.classList.remove('active');
-                    el.classList.add('text-zinc-400');
+                    el.classList.add('text-slate-500');
                 }
             });
 
