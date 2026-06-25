@@ -535,7 +535,7 @@
                             </div>
                         </div>
                         <div class="bg-white rounded-2xl p-6 border border-slate-200/80">
-                            <h3 class="font-semibold mb-6">Kelengkapan Dokumen Rata-rata</h3>
+                            <h3 class="font-semibold mb-6">Komoditas</h3>
                             <div class="h-64">
                                 <canvas id="docChart"></canvas>
                             </div>
@@ -1764,21 +1764,17 @@
                 }
             });
 
-            // Doc Chart
+            // Komoditas Chart
             const docCtx = document.getElementById('docChart').getContext('2d');
-            const docStats = DOC_NAMES.map(name => {
-                const total = companies.length;
-                const complete = companies.filter(c => c.docs.find(d => d.name === name)?.status).length;
-                return total > 0 ? Math.round((complete / total) * 100) : 0;
-            });
+            const komoditasStats = getKomoditasStats();
 
             charts.doc = new Chart(docCtx, {
                 type: 'bar',
                 data: {
-                    labels: ['Surat', 'Bupati', 'PKKPR', 'Camat', 'Desa', 'AHU', 'KTP', 'NIB', 'BO', 'Pernyataan', 'RKAB'],
+                    labels: komoditasStats.labels,
                     datasets: [{
-                        label: 'Kelengkapan (%)',
-                        data: docStats,
+                        label: 'Jumlah Perusahaan',
+                        data: komoditasStats.data,
                         backgroundColor: 'rgba(109, 93, 246, 0.75)',
                         borderRadius: 6,
                         borderSkipped: false
@@ -1789,7 +1785,7 @@
                     maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
                     scales: {
-                        y: { max: 100, grid: { color: 'rgba(226, 232, 240, 0.7)' }, ticks: { color: '#64748b' } },
+                        y: { beginAtZero: true, ticks: { color: '#64748b', precision: 0 }, grid: { color: 'rgba(226, 232, 240, 0.7)' } },
                         x: { grid: { display: false }, ticks: { color: '#64748b', font: { size: 10 } } }
                     }
                 }
@@ -1811,14 +1807,24 @@
                 charts.status.update();
             }
             if (charts.doc) {
-                const docStats = DOC_NAMES.map(name => {
-                    const total = companies.length;
-                    const complete = companies.filter(c => c.docs.find(d => d.name === name)?.status).length;
-                    return total > 0 ? Math.round((complete / total) * 100) : 0;
-                });
-                charts.doc.data.datasets[0].data = docStats;
+                const komoditasStats = getKomoditasStats();
+                charts.doc.data.labels = komoditasStats.labels;
+                charts.doc.data.datasets[0].data = komoditasStats.data;
                 charts.doc.update();
             }
+        }
+
+        function getKomoditasStats() {
+            const counts = {};
+            companies.forEach(c => {
+                const key = c.komoditas && c.komoditas.trim() ? c.komoditas : 'Belum Diisi';
+                counts[key] = (counts[key] || 0) + 1;
+            });
+            const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+            return {
+                labels: sorted.map(([name]) => name),
+                data: sorted.map(([, count]) => count)
+            };
         }
 
         function renderKabupatenStats() {
